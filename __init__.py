@@ -1,1 +1,1 @@
-from rocks import Rocks, pcafigure, pca
+from .rocks import Rocks, pcafigure, pca
