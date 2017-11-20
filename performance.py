@@ -18,7 +18,7 @@
 import numpy as np
 import plotly.graph_objs as go
 import scipy.spatial.distance
-from picturedrocks import Rocks
+from .rocks import Rocks
 from plotly.offline import iplot
 
 def kfoldindices(n, k, random=False):

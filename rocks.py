@@ -85,7 +85,7 @@ class Rocks:
         self.N, self.P = X.shape
 
         self.genes = genes
-        assert (genes == None or len(genes) == P), \
+        assert (genes is None or len(genes) == self.P), \
                 "genes must be an array of length P or None"
 
         # Some extra elements that will be needed for OvA
@@ -101,7 +101,7 @@ class Rocks:
                 "y should be a matrix of shape (N,1)"
         
         self.K = self.y.max() + 1
-        assert np.equal(np.unique(self.y), range(self.K)).all(), \
+        assert np.array_equal(np.unique(self.y), range(self.K)), \
                 "Cluster labels should be 0, 1, 2, ..., K -1"
         
         self.clusterindices = {}
@@ -142,7 +142,7 @@ class Rocks:
     def markers_mutualinfo(self, n, pool = None):        
         import datetime
         X = np.log2(self.X+1).round().astype(int)
-        if pool == None:
+        if pool is None:
             pool = range(self.P)
         
         maxentry = max(X.max(), self.y.max())
