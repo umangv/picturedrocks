@@ -10,6 +10,8 @@ Welcome to PicturedRocks's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   rocks
+
 
 
 Indices and tables

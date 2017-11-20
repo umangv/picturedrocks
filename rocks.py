@@ -63,27 +63,37 @@ def pca(Xin, dim=3):
 
 
 class Rocks:
-    # A Rocks object takes in the following parameters:
-    # X: the gene expression matrix. We expect a numpy array of shape (N, P)
-    #    containing data for N cells and P genes (note rows are cells and
-    #    columns are genes.
-    # y: cluster labels for N cells. We expect a numpy array of shape (N, 1) or
-    #    (N,).
-    # genes: names of genes. We expect an array of P strings, containing the
-    #    names of various genes
-    # verbose: verbosity level for debugging; defaults to 0.
+    """PicturedRocks Single-Cell RNA-seq Analysis Tool
+
+     :param X: the gene expression matrix. We expect a numpy array of shape (N, P)
+         containing data for N cells and P genes (note rows are cells and
+         columns are genes.
+     :param y: cluster labels for N cells. We expect a numpy array of shape (N,
+         1) or (N,) taking values 0, 1, 2, ..., K - 1. 
+     :param genes: (optional) names of genes. We expect an array of P strings,
+         containing the names of various genes
+     :param verbose: verbosity level for debugging; defaults to 0.
+
+     For example, if you import your data using a `pandas` dataframe with P
+     genes (columns) and N rows (cells) and a "Cluster" column as the last
+     column, you can create a Rocks object as follows::
+
+         X = df.as_matrix()[:,:-1]
+         y = df.as_matrix()[:,-1]
+         genes = dataframe.columns
+         rocks = Rocks(X, y, genes)
+     """
     def __init__(self, X, y, genes=None, verbose=0):
+        self.verbose = verbose
         # self.X is the expression data
+        self.X = X
         # self.y is the cluster assignment
+        self.y = y
         # self.N is the number of cells
         # self.P is the number of genes
-        # self.K is the number of clusters
-        # self.genes contains the names of the genes
-        self.verbose = verbose
-        self.X = X
-        self.y = y
         self.N, self.P = X.shape
 
+        # self.genes contains the names of the genes
         self.genes = genes
         assert (genes == None or len(genes) == P), \
                 "genes must be an array of length P or None"
@@ -101,6 +111,7 @@ class Rocks:
                 "y should be a matrix of shape (N,1)"
         
         self.K = self.y.max() + 1
+        # self.K is the number of clusters
         assert np.equal(np.unique(self.y), range(self.K)).all(), \
                 "Cluster labels should be 0, 1, 2, ..., K -1"
         
@@ -115,6 +126,16 @@ class Rocks:
 
     # markers can be a list or 1-dim np array
     def markers_to_genes(self, markers):
+        """Convert gene indices to gene names
+
+        :param markers: a list of marker indices (numbers between 0 and P)
+        :returns: a list of gene names
+
+        .. note::
+            to use this method, Rocks.genes must have been specified, either at
+            initialization or manually via ``object.genes = ...``
+        """
+
         try:
             return [self.genes[a] for a in markers]
         except TypeError:
@@ -122,6 +143,16 @@ class Rocks:
 
     
     def normalize(self, totalexpr="median", log=True):
+        """Normalize data
+
+        :param totalexpr: the total expression to normalize every cell to. For
+            example, if `totalexpr =  1000`, each cell is scaled so that its
+            expression levels add to 1000. If `totalexpr = "median"` (default
+            behavior), we set the total expression to the median total
+            expression across all cells.
+        :param log: whether to log-transform the data (we always add 1 before
+            taking logs).
+        """
         cellsize = self.X.sum(axis=1).reshape((self.N,1))
         targetsize = np.median(cellsize) if totalexpr == "median" else totalexpr
 
@@ -134,12 +165,22 @@ class Rocks:
         self.Xcent, self.pcs, self.Xpca = (None, None, None)
     
     def pca(self, dims=3):
+        """Perform PCA on the data
+
+        :param dims: number of dimensions to consider in PCA
+        """
         self.Xcent, Sigma, self.pcs, self.Xpca = pca(self.X, dims)
         self.totalvariation = np.trace(Sigma)
         # Sigma is too big to be worth storing in memory
 
     
     def markers_mutualinfo(self, n, pool = None):        
+        """Compute markers using mutual information
+
+        :param n: the number of markers to select
+        :param pool: (optional) pool of genes to restrict marker selection
+            search to
+        """
         import datetime
         X = np.log2(self.X+1).round().astype(int)
         if pool == None:
@@ -475,6 +516,10 @@ class Rocks:
         
 
 def pcafigure(celldata):
+    """Generate a 3d PCA figure of Rocks data
+
+    :param celldata: a Rocks object
+    """
     import colorlover as cl
     import plotly.graph_objs as go
     if celldata.Xpca is None:
