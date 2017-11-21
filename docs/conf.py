@@ -169,7 +169,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'PicturedRocks', 'PicturedRocks Documentation',
-     author, 'PicturedRocks', 'One line description of project.',
+     author, 'PicturedRocks', 'Single Cell RNA-seq Analysis Tool',
      'Miscellaneous'),
 ]
 

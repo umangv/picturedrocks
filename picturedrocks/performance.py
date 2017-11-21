@@ -36,6 +36,11 @@ def kfoldindices(n, k, random=False):
         #            but it doesn't matter
 
 class PerformanceReport:
+    """Report actual vs predicted statistics
+    
+    :param y: actual cluster labels, (N, 1)-shaped numpy array
+    :param yhat: predicted cluster labels, (N, 1)-shaped numpy array
+    """
     def __init__(self, y, yhat):
         self.y = y
         self.yhat = yhat
@@ -66,7 +71,12 @@ class PerformanceReport:
             wrong/self.N))
 
     def getconfusionmatrix(self):
-        """Returns the confusion matrix for the latest run"""
+        """Get the confusion matrix for the latest run
+        
+        :returns: a numpy array of shape (K, K), with the [i, j] entry being the
+            fraction of cells in cluster i that were predicted to be in cluster
+            j
+        """
         K = self.K
         freq_table = np.zeros([K, K])
         for i in range(K):
@@ -77,7 +87,10 @@ class PerformanceReport:
         return freq_table
     
     def confusionmatrixfigure(self):
-        """Compute and make a confusion matrix plotly figure"""
+        """Compute and make a confusion matrix plotly figure
+        
+        :returns: a plotly figure of a confusion matrix
+        """
         freq_table = self.getconfusionmatrix()
         shape = freq_table.shape
         trace = go.Heatmap(z=freq_table, x=np.arange(shape[1]),
@@ -96,11 +109,23 @@ class PerformanceReport:
         return go.Figure(data=[trace], layout=layout)
     
     def show(self):
-        """Print a full report"""
+        """Print a full report
+        
+        This uses `iplot`, so we assume this will only be run in a Jupyter
+        notebook and that `init_notebook_mode` has already been run.
+        """
         self.printscore()
         iplot(self.confusionmatrixfigure())
 
 class FoldTester:
+    """Performs K-fold Cross Validation for Marker Selection
+
+    :param data: a Rocks object
+
+    `FoldTester` can be used to evaluate various marker selection algorithms. It
+    can split the data in K folds, run marker selection algorithms on these
+    folds, and classify data based on testing and training data.
+    """
     def __init__(self, data):
         self.data = data
         
@@ -109,15 +134,32 @@ class FoldTester:
         self.markers = None
     
     def makefolds(self, k=5, random=False):
+        """Makes folds
+
+        :param k: the value of K
+        :param random: if true, `makefolds` will make folds randomly. Otherwise,
+            the folds are made in order (i.e., the first ceil(N/k) cells in the
+            first fold, etc.)
+        """
         self.folds = list(kfoldindices(self.data.N, k, random))
         
     def savefolds(self, file):
+        """Save folds to a file
+
+        :param file: filename to save (typically with a `.npz` extension
+        """
         d = {"k": len(self.folds), "y": self.data.y}
         for i, f in enumerate(self.folds):
             d["fold{}".format(i)] = f
         return np.savez(file, **d)
     
     def loadfolds(self, file):
+        """Load folds from a file
+
+        The file can be one saved either by `savefolds` or
+        `savefoldsandmarkers`. In the latter case, it will not load any markers.
+        See `loadfoldsandmarkers`.
+        """
         d = np.load(file)
         k = d["k"]
         self.folds = [d["fold{}".format(i)] for i in range(k)]
@@ -132,6 +174,13 @@ class FoldTester:
         return np.alltrue(counts == 1)
         
     def selectmarkers(self, select_function, verbose=0):
+        """Perform a marker selection algorithm on each fold
+
+        :param select_function: a function that takes in a Rocks object and
+            outputs a list of markers, given by index (of the numpy array)
+        :param verbose: (optional) the level of verbosity to set in the Rocks
+            objects created for each fold. Used for debugging.
+        """
         k = len(self.folds)
         self.markers = []
         for f in self.folds:
@@ -142,6 +191,13 @@ class FoldTester:
             self.markers.append(select_function(traindata))
         
     def savefoldsandmarkers(self, file):
+        """Save folds and markers for each fold
+
+        This saves folds, and for each fold, the markers found by
+        `selectmarkers`.
+
+        :param file: filename to save to (typically with a `.npz` extension)
+        """
         d = {"k": len(self.folds), "y": self.data.y}
         for i, f in enumerate(self.folds):
             d["fold{}".format(i)] = f
@@ -150,6 +206,10 @@ class FoldTester:
         return np.savez(file, **d)
     
     def loadfoldsandmarkers(self, file):
+        """Load folds and markers
+
+        Loads a folds and markers file saved by `savefoldsandmarkers`
+        """
         d = np.load(file)
         k = d["k"]
         self.folds = [d["fold{}".format(i)] for i in range(k)]
@@ -159,6 +219,16 @@ class FoldTester:
         assert self.validatefolds(), "folds are not partition of indices"
         
     def classify(self, classifer):
+        """Classify each cell using training data from other folds
+
+        For each fold, we project the data onto the markers selected for that
+        fold, which we treat as test data. We also project the complement of the
+        fold and treat that as training data.
+
+        :param classifier: a classifier that trains with a training data set and
+            predicts labels of test data. See `NearestCentroidClassifier` for an
+            example.
+        """
         self.yhat = np.zeros(self.data.N, dtype=int) - 1
         for i, f in enumerate(self.folds):
             mask = np.zeros(self.data.N, dtype=bool)
@@ -170,6 +240,11 @@ class FoldTester:
             self.yhat[f] = c.test(self.data.X[f,:][:,self.markers[i]])
 
 class NearestCentroidClassifier:
+    """Nearest Centroid Classifier for Cross Validation
+
+    Computes the centroid of each cluster label in the training data, then
+    predicts the label of each test data point by finding the nearest centroid.
+    """
     def __init__(self):
         self.traindata = None
         self.xkibar = None

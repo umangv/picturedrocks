@@ -1,5 +1,5 @@
 The rocks module
 ================
 
-.. automodule:: rocks
+.. automodule:: picturedrocks.rocks
    :members:
