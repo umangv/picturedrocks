@@ -13,13 +13,11 @@ To create a `Rocks` object, you need `X` (the gene expression matrix, a numpy ar
 
 ```python
 from picturedrocks import Rocks
-
 rocks = Rocks(X, y, genes=genes)
-# or, if genes is not available
-rocks = Rocks(X, y)
 ```
 
-More information on the methods can be found in comments in the code.
+More detailed information can be found on the [online documentation](https://picturedrocks.github.io/docs/).
+
 
 ## Copyright
 
