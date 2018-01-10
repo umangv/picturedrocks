@@ -189,6 +189,27 @@ class FoldTester:
             traindata = Rocks(self.data.X[~mask], self.data.y[~mask],
                     verbose=verbose)
             self.markers.append(select_function(traindata))
+
+    def selectmarkersandclasify(self, select_function, verbose=0):
+        """Perform an embedded feature selection algorithm on each fold
+
+        :param select_function: a function that takes in a Rocks object as training
+            data and and a test dataset. The function should output a 2-tuple:
+            ( [a list of markers indices], yhat)
+        :param verbose: (optional) the level of verbosity to set in the Rocks
+            objects created for each fold. Used for debugging.
+        """
+        k = len(self.folds)
+        self.markers = []
+        self.yhat = np.zeros(self.data.N, dtype=int) - 1
+        for f in self.folds:
+            mask = np.zeros(self.data.N, dtype=bool)
+            mask[f] = True
+            traindata = Rocks(self.data.X[~mask], self.data.y[~mask],
+                    verbose=verbose)
+            markers, yhat = select_function(traindata, self.data.X[f])
+            self.markers.append(markers)
+            self.yhat[f] = yhat
         
     def savefoldsandmarkers(self, file):
         """Save folds and markers for each fold
