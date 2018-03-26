@@ -513,25 +513,28 @@ class Rocks:
                 alpha=alpha, lambFac=lambFac, epsList=epsList)
         return self.support2list(support_genes)
 
-        
-
-def pcafigure(celldata):
-    """Generate a 3d PCA figure of Rocks data
+def genericplot(celldata, coords):
+    """Generate a figure for some embedding of Rocks data
 
     :param celldata: a Rocks object
+    :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
     """
     import colorlover as cl
     import plotly.graph_objs as go
-    if celldata.Xpca is None or celldata.Xpca.shape[1] < 3:
-        print("Need 3 PCs. Calculating now.")
-        celldata.pca(3)
-    Xpca = celldata.Xpca
+
+    def scatter(coords, *args, **kwargs):
+        """Run the appropriate scatter function"""
+        assert coords.shape[1] in [2,3], "incorrect dimensions for coords"
+        if coords.shape[1] == 2:
+            return go.Scatter(x=coords[:,0], y=coords[:,1], *args, **kwargs)
+        else:
+            return go.Scatter3d(x=coords[:,0], y=coords[:,1], z=coords[:,2],
+                    *args, **kwargs)
     clusterindices = celldata.clusterindices
     colscal = cl.scales['9']['qual']['Set1']
-    plotdata = [go.Scatter3d(
-            x=Xpca[inds,0],
-            y=Xpca[inds,1],
-            z=Xpca[inds,2],
+
+    plotdata = [scatter(
+            coords[inds],
             mode='markers',
             marker=dict(
                 size=4,
@@ -549,10 +552,20 @@ def pcafigure(celldata):
             r=0,
             b=0,
             t=0
-        )
+        ),
+        hovermode="closest",
     )
     return go.Figure(data=plotdata, layout=layout)
 
+def pcafigure(celldata):
+    """Make a 3D PCA figure for a Rocks object
+
+    :param celldata: a Rocks object
+    """
+    if celldata.Xpca is None or celldata.Xpca.shape[1] < 3:
+        print("Need 3 PCs. Calculating now.")
+        celldata.pca(3)
+    return genericplot(celldata, celldata.Xpca[:,-3:])
 
 def genericwrongplot(celldata, coords, yhat, labels=None):
     """Plot figure with incorrectly classified points highlighted
