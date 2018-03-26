@@ -589,12 +589,12 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
     # indices (by cluster) where wrong
     wronginds = {}
     for k in range(celldata.K):
-        wronginds[k] = np.nonzero((y == k) & (np.not_equal(yhat,y)))[0]
+        wronginds[k] = np.nonzero((y == k) & np.not_equal(yhat,y))[0]
     
     # indices (by cluster) where correct 
     clustinds = {}
     for k in range(celldata.K):
-        clustinds[k] = [a for a in np.nonzero(y == k & np.equal(yhat, y))[0]]
+        clustinds[k] = np.nonzero((y == k) & np.equal(yhat, y))[0]
 
     def scatter(coords, *args, **kwargs):
         """Run the appropriate scatter function"""
@@ -623,7 +623,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
             marker=dict(
                 size=4,
                 color=colscal[k % len(colscal)],
-                opacity=0.1),
+                opacity=0.2),
             name="Cluster {}".format(k),
             hoverinfo="name",
             showlegend=False)
@@ -635,7 +635,8 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
             r=0,
             b=0,
             t=0
-        )
+        ),
+        hovermode="closest"
     )
     if labels:
         layout["scene"] = dict(
