@@ -554,44 +554,47 @@ def pcafigure(celldata):
     return go.Figure(data=plotdata, layout=layout)
 
 
-def pcawrongplot(celldata, yhat):
-    """Generate a 3d PCA figure with incorrectly classified points highlighted
-
-    :param celldata: a Rocks object
-    :param yhat: computed (guessed) y vector
+def genericwrongplot(celldata, coords, yhat, labels=None):
+    """Plot figure with incorrectly classified points highlighted
+    
+    :param celldata: Rocks object
+    :param coords: a (N, 2) or (N, 3) shaped array with coordinates to plot
+    :param yhat: (N, 1) shaped array of predicted/guessed y values
+    :param labels: (optional) list of axis titles
     """
     import colorlover as cl
     import plotly.graph_objs as go
 
 
-    if celldata.Xpca is None or celldata.Xpca.shape[1] < 3:
-        print("Need 3 PCs. Calculating now.")
-        celldata.pca(3)
-    Xpca = celldata.Xpca
-
-    yact = celldata.y
-    if yhat.shape == (yact.shape[0],):
-        yhat = yhat.reshape(yact.shape)
-    assert yhat.shape == yact.shape, "yhat must have shape (N, 1)"
+    y = celldata.y
+    if yhat.shape == (y.shape[0],):
+        yhat = yhat.reshape(y.shape)
+    assert yhat.shape == y.shape, "yhat must have shape (N, 1)"
 
     colscal = cl.scales['9']['qual']['Set1']
 
     # indices (by cluster) where wrong
     wronginds = {}
     for k in range(celldata.K):
-        wronginds[k] = np.nonzero((yact == k) & (np.not_equal(yhat,yact)))[0]
+        wronginds[k] = np.nonzero((y == k) & (np.not_equal(yhat,y)))[0]
     
     # indices (by cluster) where correct 
     clustinds = {}
     for k in range(celldata.K):
-        clustinds[k] = [a for a in np.nonzero(yact == k & np.equal(yhat, yact))[0]]
+        clustinds[k] = [a for a in np.nonzero(y == k & np.equal(yhat, y))[0]]
+
+    def scatter(coords, *args, **kwargs):
+        """Run the appropriate scatter function"""
+        assert coords.shape[1] in [2,3], "incorrect dimensions for coords"
+        if coords.shape[1] == 2:
+            return go.Scatter(x=coords[:,0], y=coords[:,1], *args, **kwargs)
+        else:
+            return go.Scatter3d(x=coords[:,0], y=coords[:,1], z=coords[:,2],
+                    *args, **kwargs)
         
-    
     # Get the points that are wrong
-    plotdata = [go.Scatter3d(
-            x=Xpca[inds,0],
-            y=Xpca[inds,1],
-            z=Xpca[inds,2],
+    plotdata = [scatter(
+            coords[inds],
             mode='markers',
             marker=dict(
                 size=4,
@@ -601,30 +604,19 @@ def pcawrongplot(celldata, yhat):
             hoverinfo="name+text",
             text = ["Predict {}".format(str(a)) for a in yhat[inds]])
             for k, inds in wronginds.items()] + \
-        [go.Scatter3d(
-            x=Xpca[inds,0],
-            y=Xpca[inds,1],
-            z=Xpca[inds,2],
+        [scatter(
+            coords[inds],
             mode='markers',
             marker=dict(
                 size=4,
-                color=colscal[k % len(colscal)],               
-        opacity=0.1),
+                color=colscal[k % len(colscal)],
+                opacity=0.1),
+            name="Cluster {}".format(k),
+            hoverinfo="name",
             showlegend=False)
             for k, inds in clustinds.items()]
         
     layout = go.Layout(
-        scene=dict(
-            xaxis=dict(
-                title="PC1"
-            ),
-            yaxis=dict(
-                title="PC2"
-            ),
-            zaxis=dict(
-                title="PC3"
-            )  
-        ),
         margin=dict(
             l=0,
             r=0,
@@ -632,5 +624,28 @@ def pcawrongplot(celldata, yhat):
             t=0
         )
     )
+    if labels:
+        layout["scene"] = dict(
+            xaxis=dict(title=labels[0]),
+            yaxis=dict(title=labels[1]),
+        )
+        if len(labels) == 3:
+            layout["scene"]["zaxis"] = dict(title=labels[2])
 
     return go.Figure(data=plotdata, layout=layout)
+
+
+def pcawrongplot(celldata, yhat):
+    """Generate a 3d PCA figure with incorrectly classified points highlighted
+
+    :param celldata: a Rocks object
+    :param yhat: computed (guessed) y vector
+    """
+
+    if celldata.Xpca is None or celldata.Xpca.shape[1] < 3:
+        print("Need 3 PCs. Calculating now.")
+        celldata.pca(3)
+    Xpca = celldata.Xpca
+    return genericwrongplot(celldata, Xpca[:,-3:], yhat,
+            labels=["PC1", "PC2", "PC3"])
+
