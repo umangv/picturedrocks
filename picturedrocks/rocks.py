@@ -522,7 +522,8 @@ def pcafigure(celldata):
     """
     import colorlover as cl
     import plotly.graph_objs as go
-    if celldata.Xpca is None:
+    if celldata.Xpca is None or celldata.Xpca.shape[1] < 3:
+        print("Need 3 PCs. Calculating now.")
         celldata.pca(3)
     Xpca = celldata.Xpca
     clusterindices = celldata.clusterindices
@@ -550,4 +551,86 @@ def pcafigure(celldata):
             t=0
         )
     )
+    return go.Figure(data=plotdata, layout=layout)
+
+
+def pcawrongplot(celldata, yhat):
+    """Generate a 3d PCA figure with incorrectly classified points highlighted
+
+    :param celldata: a Rocks object
+    :param yhat: computed (guessed) y vector
+    """
+    import colorlover as cl
+    import plotly.graph_objs as go
+
+
+    if celldata.Xpca is None or celldata.Xpca.shape[1] < 3:
+        print("Need 3 PCs. Calculating now.")
+        celldata.pca(3)
+    Xpca = celldata.Xpca
+
+    yact = celldata.y
+    if yhat.shape == (yact.shape[0],):
+        yhat = yhat.reshape(yact.shape)
+    assert yhat.shape == yact.shape, "yhat must have shape (N, 1)"
+
+    colscal = cl.scales['9']['qual']['Set1']
+
+    # indices (by cluster) where wrong
+    wronginds = {}
+    for k in range(celldata.K):
+        wronginds[k] = np.nonzero((yact == k) & (np.not_equal(yhat,yact)))[0]
+    
+    # indices (by cluster) where correct 
+    clustinds = {}
+    for k in range(celldata.K):
+        clustinds[k] = [a for a in np.nonzero(yact == k & np.equal(yhat, yact))[0]]
+        
+    
+    # Get the points that are wrong
+    plotdata = [go.Scatter3d(
+            x=Xpca[inds,0],
+            y=Xpca[inds,1],
+            z=Xpca[inds,2],
+            mode='markers',
+            marker=dict(
+                size=4,
+                color=colscal[k % len(colscal)],
+                opacity=1),
+            name="Cluster {}".format(k),
+            hoverinfo="name+text",
+            text = ["Predict {}".format(str(a)) for a in yhat[inds]])
+            for k, inds in wronginds.items()] + \
+        [go.Scatter3d(
+            x=Xpca[inds,0],
+            y=Xpca[inds,1],
+            z=Xpca[inds,2],
+            mode='markers',
+            marker=dict(
+                size=4,
+                color=colscal[k % len(colscal)],               
+        opacity=0.1),
+            showlegend=False)
+            for k, inds in clustinds.items()]
+        
+    layout = go.Layout(
+        scene=dict(
+            xaxis=dict(
+                title="PC1"
+            ),
+            yaxis=dict(
+                title="PC2"
+            ),
+            zaxis=dict(
+                title="PC3"
+            )  
+        ),
+        margin=dict(
+            l=0,
+            r=0,
+            b=0,
+            t=0
+        )
+    )
+
     return go.Figure(data=plotdata, layout=layout)
