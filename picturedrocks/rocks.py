@@ -547,12 +547,7 @@ def genericplot(celldata, coords):
             for k, inds in clusterindices.items()]
 
     layout = go.Layout(
-        margin=dict(
-            l=0,
-            r=0,
-            b=0,
-            t=0
-        ),
+        margin=dict(l=0, r=0, b=0, t=0),
         hovermode="closest",
     )
     return go.Figure(data=plotdata, layout=layout)
@@ -630,12 +625,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
             for k, inds in clustinds.items()]
         
     layout = go.Layout(
-        margin=dict(
-            l=0,
-            r=0,
-            b=0,
-            t=0
-        ),
+        margin=dict(l=0, r=0, b=0, t=0),
         hovermode="closest"
     )
     if labels:
@@ -663,3 +653,81 @@ def pcawrongplot(celldata, yhat):
     return genericwrongplot(celldata, Xpca[:,-3:], yhat,
             labels=["PC1", "PC2", "PC3"])
 
+
+def plotgeneheat(celldata, coords, genes):
+    """Generate a figure for some embedding of Rocks data
+
+    :param celldata: a Rocks object
+    :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
+    :param genes: list of gene indices
+    """
+    import colorlover as cl
+    import plotly.graph_objs as go
+
+    def scatter(coords, *args, **kwargs):
+        """Run the appropriate scatter function"""
+        assert coords.shape[1] in [2,3], "incorrect dimensions for coords"
+        if coords.shape[1] == 2:
+            return go.Scatter(x=coords[:,0], y=coords[:,1], *args, **kwargs)
+        else:
+            return go.Scatter3d(x=coords[:,0], y=coords[:,1], z=coords[:,2],
+                    *args, **kwargs)
+    numclusts = celldata.K
+    clusterindices = celldata.clusterindices
+    clustscal = cl.scales['9']['qual']['Set1']
+    genescal = np.array(cl.scales['8']['seq']['Blues'])
+
+    plotbyclust = [scatter(
+            coords[inds],
+            mode='markers',
+            marker=dict(
+                size=4,
+                color=clustscal[k % len(clustscal)], # set color to an array/list
+                #                                  of desired values
+                ),
+            name="Cluster {}".format(k),
+            hoverinfo="name"
+            )
+            for k, inds in clusterindices.items()]
+    
+    
+    geneexpr = celldata.X[:,genes]
+    geneexpr = np.round(geneexpr*7/geneexpr.max(axis=0)).astype(int)
+    numgenes = geneexpr.shape[1]
+    genenames = ["Gene {}".format(genes[i]) if celldata.genes is None \
+                 else celldata.genes[i] for i in range(numgenes)]
+    
+    plotbygene = [scatter(
+            coords,
+            mode='markers',
+            marker=dict(
+                size=4,
+                color=genescal[geneexpr[:,i]],
+                ),
+            name=genenames[i],
+            hoverinfo="name",
+            visible=False,
+            ) for i, genename in enumerate(genenames)]
+    buttons = [dict(label="Clust",
+                    method="update",
+                     args=[{"visible": [True] * numclusts + [False] * numgenes}, {}]
+                    ),]
+    for i, genename in enumerate(genenames):
+        v = [False] * (numclusts + numgenes)
+        v[numclusts + i] = True
+        buttons.append(dict(label=genename,
+                    method="update",
+                    args=[{"visible": v}, {}])
+                    )
+        
+    updatemenus = [dict(type="buttons", buttons=buttons, direction="left",  x=0.1, y=1.1, xanchor="left", yanchor="top", pad={'r':10, 't': 10},)]
+    layout = go.Layout(
+        margin=dict(l=0, r=0, b=0, t=0),
+        hovermode="closest",
+        updatemenus=updatemenus,
+        annotations=[
+            dict(text='View:', x=0.01, y=1.065, xref='paper', yref='paper', align='left', showarrow=False)],
+        showlegend=True,
+    )
+
+    return go.Figure(data=plotbyclust+plotbygene, layout=layout)
