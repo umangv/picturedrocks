@@ -518,6 +518,10 @@ class Rocks:
 def genericplot(celldata, coords):
     """Generate a figure for some embedding of Rocks data
 
+    This function supports both 2D and 3D plots. This may be used to plot data
+    for any embedding (e.g., PCA or t-SNE). For example usage, see code for
+    `pcafigure`.
+
     :param celldata: a Rocks object
     :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
     """
@@ -567,6 +571,9 @@ def pcafigure(celldata):
 def genericwrongplot(celldata, coords, yhat, labels=None):
     """Plot figure with incorrectly classified points highlighted
     
+    This can be used with any 2D or 3D embedding (e.g., PCA or t-SNE). For
+    example code, see `pcawrongplot`.
+
     :param celldata: Rocks object
     :param coords: a (N, 2) or (N, 3) shaped array with coordinates to plot
     :param yhat: (N, 1) shaped array of predicted/guessed y values
@@ -642,7 +649,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
 
 
 def pcawrongplot(celldata, yhat):
-    """Generate a 3d PCA figure with incorrectly classified points highlighted
+    """Generate a 3D PCA figure with incorrectly classified points highlighted
 
     :param celldata: a Rocks object
     :param yhat: computed (guessed) y vector
@@ -657,7 +664,12 @@ def pcawrongplot(celldata, yhat):
 
 
 def plotgeneheat(celldata, coords, genes):
-    """Generate a figure for some embedding of Rocks data
+    """Generate gene heat plot for some embedding of Rocks data
+
+    This generates a figure with multiple dropdown options. The first option is
+    "Clust" for a plot similar to `genericplot`, and the remaining dropdown
+    options correspond to genes specified in `genes`. When `celldata.genes` is
+    defined, these drop downs are labeled with the gene names.
 
     :param celldata: a Rocks object
     :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
