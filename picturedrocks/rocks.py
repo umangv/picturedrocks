@@ -140,6 +140,8 @@ class Rocks:
             return [self.genes[a] for a in markers]
         except TypeError:
             raise ValueError("Gene names not specified. Set using object.genes")
+        except IndexError:
+            raise ValueError("Gene index out of range")
 
     
     def normalize(self, totalexpr="median", log=True):
@@ -692,20 +694,23 @@ def plotgeneheat(celldata, coords, genes):
     
     
     geneexpr = celldata.X[:,genes]
-    geneexpr = np.round(geneexpr*7/geneexpr.max(axis=0)).astype(int)
+    exprnorm = np.round(geneexpr*7/geneexpr.max(axis=0)).astype(int)
     numgenes = geneexpr.shape[1]
-    genenames = ["Gene {}".format(genes[i]) if celldata.genes is None \
-                 else celldata.genes[i] for i in range(numgenes)]
+    try:
+        genenames = celldata.markers_to_genes(genes)
+    except ValueError:
+        genenames = ["Gene {}".format(genes[i]) for i in range(numgenes)] 
     
     plotbygene = [scatter(
             coords,
             mode='markers',
             marker=dict(
                 size=4,
-                color=genescal[geneexpr[:,i]],
+                color=genescal[exprnorm[:,i]],
                 ),
             name=genenames[i],
-            hoverinfo="name",
+            text=geneexpr[:,i].astype(str),
+            hoverinfo="name+text",
             visible=False,
             ) for i, genename in enumerate(genenames)]
     buttons = [dict(label="Clust",
@@ -720,7 +725,7 @@ def plotgeneheat(celldata, coords, genes):
                     args=[{"visible": v}, {}])
                     )
         
-    updatemenus = [dict(type="buttons", buttons=buttons, direction="left",  x=0.1, y=1.1, xanchor="left", yanchor="top", pad={'r':10, 't': 10},)]
+    updatemenus = [dict(buttons=buttons, direction="down",  x=0.1, y=1.1, xanchor="left", yanchor="top", pad={'r':10, 't': 10},)]
     layout = go.Layout(
         margin=dict(l=0, r=0, b=0, t=0),
         hovermode="closest",
