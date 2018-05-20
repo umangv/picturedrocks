@@ -22,7 +22,7 @@ import plotly.graph_objs as go
 from .preprocessing import pca
 
 def genericplot(celldata, coords):
-    """Generate a figure for some embedding of Rocks data
+    """Generate a figure for some embedding of data
 
     This function supports both 2D and 3D plots. This may be used to plot data
     for any embedding (e.g., PCA or t-SNE). For example usage, see code for
@@ -63,7 +63,7 @@ def genericplot(celldata, coords):
     return go.Figure(data=plotdata, layout=layout)
 
 def pcafigure(celldata):
-    """Make a 3D PCA figure for a Rocks object
+    """Make a 3D PCA figure for an AnnData object
 
     :param celldata: an AnnData object
     """
@@ -78,7 +78,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
     This can be used with any 2D or 3D embedding (e.g., PCA or t-SNE). For
     example code, see `pcawrongplot`.
 
-    :param celldata: Rocks object
+    :param celldata: an AnnData object
     :param coords: a (N, 2) or (N, 3) shaped array with coordinates to plot
     :param yhat: (N, 1) shaped array of predicted/guessed y values
     :param labels: (optional) list of axis titles
@@ -152,7 +152,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
 def pcawrongplot(celldata, yhat):
     """Generate a 3D PCA figure with incorrectly classified points highlighted
 
-    :param celldata: a Rocks object
+    :param celldata: an AnnData object
     :param yhat: computed (guessed) y vector
     """
 
@@ -164,16 +164,16 @@ def pcawrongplot(celldata, yhat):
 
 
 def plotgeneheat(celldata, coords, genes):
-    """Generate gene heat plot for some embedding of Rocks data
+    """Generate gene heat plot for some embedding of AnnData
 
     This generates a figure with multiple dropdown options. The first option is
     "Clust" for a plot similar to `genericplot`, and the remaining dropdown
     options correspond to genes specified in `genes`. When `celldata.genes` is
     defined, these drop downs are labeled with the gene names.
 
-    :param celldata: a Rocks object
+    :param celldata: an AnnData object
     :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
-    :param genes: list of gene indices
+    :param genes: list of gene indices or gene names
     """
 
     def scatter(coords, *args, **kwargs):
@@ -185,7 +185,7 @@ def plotgeneheat(celldata, coords, genes):
             return go.Scatter3d(x=coords[:,0], y=coords[:,1], z=coords[:,2],
                     *args, **kwargs)
     numclusts = celldata.uns['num_clusts']
-    clusterindices = celldata.clusterindices
+    clusterindices = celldata.uns['clusterindices']
     clustscal = cl.scales['9']['qual']['Set1']
     genescal = np.array(cl.scales['8']['seq']['Blues'])
 
@@ -202,14 +202,12 @@ def plotgeneheat(celldata, coords, genes):
             )
             for k, inds in clusterindices.items()]
     
-    
+    genes = [g if type(g) == int else celldata.var.index.get_loc(g) for g in genes]
+    genenames = celldata.var.index[genes].tolist()
+
     geneexpr = celldata.X[:,genes]
-    exprnorm = np.round(geneexpr*7/geneexpr.max(axis=0)).astype(int)
+    exprnorm = np.round(geneexpr*7/geneexpr.max(axis=0)).astype(int) # this sets the color of each point
     numgenes = geneexpr.shape[1]
-    try:
-        genenames = celldata.markers_to_genes(genes)
-    except ValueError:
-        genenames = ["Gene {}".format(genes[i]) for i in range(numgenes)] 
     
     plotbygene = [scatter(
             coords,
