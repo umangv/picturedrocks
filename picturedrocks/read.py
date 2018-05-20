@@ -19,6 +19,7 @@ import pandas as pd
 
 from anndata import AnnData
 from warnings import warn
+import numpy as np
 
 def read_clusts(adata, filename, sep=","):
     clustdf = pd.read_csv(filename, sep=sep)
