@@ -23,6 +23,9 @@ import numpy as np
 
 def read_clusts(adata, filename, sep=","):
     clustdf = pd.read_csv(filename, sep=sep)
+    if clustdf.shape[1] == 2:
+        clustdf = clustdf.set_index(clustdf.columns[0])
+    assert clustdf.shape[1] == 1, "Cluster column ambigious"
     clustser = clustdf.iloc[:,0]
     if clustser.dtype.kind == 'i':
         if clustser.min() > 0:

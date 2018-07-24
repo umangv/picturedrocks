@@ -19,9 +19,25 @@ from anndata import AnnData
 import numpy as np
 import colorlover as cl
 import plotly.graph_objs as go
+import collections
 from .preprocessing import pca
 
-def genericplot(celldata, coords):
+def _deep_merge_dict(source, destination):
+    """Merges dict-like objects in a deep manner
+
+    e.g., if source =  {'a': {'b': 5}, 'c': 4} and
+    destination = {'a': {'b': 1, 'bb': 0},'d': 0}
+    then destination is changed **in place** to 
+    {'a': {'b': 5, 'bb': 0}, 'c': 4, 'd': 0}
+    """
+    
+    for key in source.keys():
+        if isinstance(source[key], collections.Mapping) and key in destination and isinstance(destination[key], collections.Mapping):
+            _deep_merge_dict(source[key], destination[key])
+        else:
+            destination[key] = source[key]
+
+def genericplot(celldata, coords, **scatterkwargs):
     """Generate a figure for some embedding of data
 
     This function supports both 2D and 3D plots. This may be used to plot data
@@ -56,13 +72,17 @@ def genericplot(celldata, coords):
             )
             for k, inds in clusterindices.items()]
 
+    if scatterkwargs:
+        for p in plotdata:
+            _deep_merge_dict(scatterkwargs, p)
+
     layout = go.Layout(
         margin=dict(l=0, r=0, b=0, t=0),
         hovermode="closest",
     )
     return go.Figure(data=plotdata, layout=layout)
 
-def pcafigure(celldata):
+def pcafigure(celldata, **scatterkwargs):
     """Make a 3D PCA figure for an AnnData object
 
     :param celldata: an AnnData object
@@ -70,9 +90,9 @@ def pcafigure(celldata):
     if 'X_pca' not in celldata.obsm_keys() or celldata.uns['num_pcs'] < 3:
         print("Need 3 PCs. Calculating now.")
         pca(celldata, 3)
-    return genericplot(celldata, celldata.obsm['X_pca'][:,-3:])
+    return genericplot(celldata, celldata.obsm['X_pca'][:,-3:], **scatterkwargs)
 
-def genericwrongplot(celldata, coords, yhat, labels=None):
+def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
     """Plot figure with incorrectly classified points highlighted
     
     This can be used with any 2D or 3D embedding (e.g., PCA or t-SNE). For
@@ -134,6 +154,10 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
             showlegend=False)
             for k, inds in clustinds.items()]
         
+    if scatterkwargs:
+        for p in plotdata:
+            _deep_merge_dict(scatterkwargs, p)
+
     layout = go.Layout(
         margin=dict(l=0, r=0, b=0, t=0),
         hovermode="closest"
@@ -149,7 +173,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None):
     return go.Figure(data=plotdata, layout=layout)
 
 
-def pcawrongplot(celldata, yhat):
+def pcawrongplot(celldata, yhat, **scatterkwargs):
     """Generate a 3D PCA figure with incorrectly classified points highlighted
 
     :param celldata: an AnnData object
@@ -160,10 +184,10 @@ def pcawrongplot(celldata, yhat):
         print("Need 3 PCs. Calculating now.")
         pca(celldata, 3)
     return genericwrongplot(celldata, celldata.obsm['X_pca'][:,-3:], yhat,
-            labels=["PC1", "PC2", "PC3"])
+            labels=["PC1", "PC2", "PC3"], **scatterkwargs)
 
 
-def plotgeneheat(celldata, coords, genes):
+def plotgeneheat(celldata, coords, genes, **scatterkwargs):
     """Generate gene heat plot for some embedding of AnnData
 
     This generates a figure with multiple dropdown options. The first option is
@@ -232,6 +256,9 @@ def plotgeneheat(celldata, coords, genes):
                     method="update",
                     args=[{"visible": v}, {}])
                     )
+    if scatterkwargs:
+        for p in plotbyclust + plotbygene:
+            _deep_merge_dict(scatterkwargs, p)
         
     updatemenus = [dict(buttons=buttons, direction="down",  x=0.1, y=1.1, xanchor="left", yanchor="top", pad={'r':10, 't': 10},)]
     layout = go.Layout(
