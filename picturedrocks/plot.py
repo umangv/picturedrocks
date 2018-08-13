@@ -36,11 +36,20 @@ def _deep_merge_dict(source, destination):
         if (
             isinstance(source[key], collections.Mapping)
             and key in destination
-            and isinstance(destination[key], collections.Mapping)
         ):
             _deep_merge_dict(source[key], destination[key])
         else:
             destination[key] = source[key]
+
+def _scatter(coords, *args, **kwargs):
+    """Run the appropriate scatter function"""
+    assert coords.shape[1] in [2, 3], "incorrect dimensions for coords"
+    if coords.shape[1] == 2:
+        return go.Scatter(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
+    else:
+        return go.Scatter3d(
+            x=coords[:, 0], y=coords[:, 1], z=coords[:, 2], *args, **kwargs
+        )
 
 
 def genericplot(celldata, coords, **scatterkwargs):
@@ -54,21 +63,11 @@ def genericplot(celldata, coords, **scatterkwargs):
     :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
     """
 
-    def scatter(coords, *args, **kwargs):
-        """Call the appropriate scatter function"""
-        assert coords.shape[1] in [2, 3], "incorrect dimensions for coords"
-        if coords.shape[1] == 2:
-            return go.Scatter(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
-        else:
-            return go.Scatter3d(
-                x=coords[:, 0], y=coords[:, 1], z=coords[:, 2], *args, **kwargs
-            )
-
     clusterindices = celldata.uns["clusterindices"]
     colscal = cl.scales["9"]["qual"]["Set1"]
 
     plotdata = [
-        scatter(
+        _scatter(
             coords[inds],
             mode="markers",
             marker=dict(
@@ -131,19 +130,9 @@ def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
     for k in range(celldata.uns["num_clusts"]):
         clustinds[k] = np.nonzero((y == k) & np.equal(yhat, y))[0]
 
-    def scatter(coords, *args, **kwargs):
-        """Run the appropriate scatter function"""
-        assert coords.shape[1] in [2, 3], "incorrect dimensions for coords"
-        if coords.shape[1] == 2:
-            return go.Scatter(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
-        else:
-            return go.Scatter3d(
-                x=coords[:, 0], y=coords[:, 1], z=coords[:, 2], *args, **kwargs
-            )
-
     # Get the points that are wrong
     plotdata = [
-        scatter(
+        _scatter(
             coords[inds],
             mode="markers",
             marker=dict(size=4, color=colscal[k % len(colscal)], opacity=1),
@@ -153,7 +142,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
         )
         for k, inds in wronginds.items()
     ] + [
-        scatter(
+        _scatter(
             coords[inds],
             mode="markers",
             marker=dict(size=4, color=colscal[k % len(colscal)], opacity=0.2),
@@ -209,23 +198,13 @@ def plotgeneheat(celldata, coords, genes, **scatterkwargs):
     :param genes: list of gene indices or gene names
     """
 
-    def scatter(coords, *args, **kwargs):
-        """Run the appropriate scatter function"""
-        assert coords.shape[1] in [2, 3], "incorrect dimensions for coords"
-        if coords.shape[1] == 2:
-            return go.Scatter(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
-        else:
-            return go.Scatter3d(
-                x=coords[:, 0], y=coords[:, 1], z=coords[:, 2], *args, **kwargs
-            )
-
     numclusts = celldata.uns["num_clusts"]
     clusterindices = celldata.uns["clusterindices"]
     clustscal = cl.scales["9"]["qual"]["Set1"]
     genescal = np.array(cl.scales["8"]["seq"]["Blues"])
 
     plotbyclust = [
-        scatter(
+        _scatter(
             coords[inds],
             mode="markers",
             marker=dict(
@@ -249,7 +228,7 @@ def plotgeneheat(celldata, coords, genes, **scatterkwargs):
     numgenes = geneexpr.shape[1]
 
     plotbygene = [
-        scatter(
+        _scatter(
             coords,
             mode="markers",
             marker=dict(size=4, color=genescal[exprnorm[:, i]]),
