@@ -22,29 +22,36 @@ from warnings import warn
 import numpy as np
 
 
-def read_clusts(adata, filename, sep=","):
+def read_clusts(adata, filename, sep=",", copy=False):
+    adata = adata.copy() if copy else adata
     clustdf = pd.read_csv(filename, sep=sep)
     if clustdf.shape[1] == 2:
         clustdf = clustdf.set_index(clustdf.columns[0])
     assert clustdf.shape[1] == 1, "Cluster column ambigious"
-    clustser = clustdf.iloc[:, 0]
-    if clustser.dtype.kind == "i":
-        if clustser.min() > 0:
+    clusters = clustdf.iloc[:, 0]
+    if clusters.dtype.kind == "i":
+        if clusters.min() > 0:
             warn("Changing cluster ids to begin at 0.")
-            clustser -= clustser.min()
-        clustuniq = np.sort(clustser.unique())
+            clusters -= clusters.min()
+        clustuniq = np.sort(clusters.unique())
         assert np.array_equal(
             clustuniq, np.arange(clustuniq.size)
         ), "Cluster ids need to be 0, 1, ..., K-1"
-        adata.obs["y"] = clustser
-        adata.obs["clust"] = ("Cluster " + clustser.astype("str")).astype("category")
+        adata.obs["y"] = clusters
+        adata.obs["clust"] = ("Cluster " + clusters.astype("str")).astype("category")
     else:
-        adata.obs["clust"] = clustser.astype("category")
+        adata.obs["clust"] = clusters.astype("category")
         adata.obs["y"] = adata.obs["clust"].cat.codes
     if adata.obs["y"].isnull().any() or adata.obs["clust"].isnull().any():
         warn("Some or all cells not assigned to cluster.")
+    return adata
+
+def process_clusts(adata, copy=False):
+    adata = adata.copy() if copy else adata
+    adata.obs["clust"] = adata.obs['clust'].astype("category")
     adata.uns["num_clusts"] = adata.obs["clust"].cat.categories.size
     clusterindices = {}
     for k in range(adata.uns["num_clusts"]):
         clusterindices[k] = (adata.obs["y"] == k).nonzero()[0]
     adata.uns["clusterindices"] = clusterindices
+    return adata
