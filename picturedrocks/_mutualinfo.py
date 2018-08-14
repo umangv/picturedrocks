@@ -17,12 +17,12 @@
 
 import numpy as np
 import datetime
-from logging import info, debug
+from logging import info
 
 
 def makeinfoset(adata):
     """Discretize data"""
-    return InformationSet(np.log(adata.X + 1).round().astype(int))
+    return InformationSet(np.log2(adata.X + 1).round().astype(int), adata.obs["y"])
 
 
 def mutualinfo(infoset, n, pool=None, obj="mrmr"):
@@ -34,15 +34,16 @@ def mutualinfo(infoset, n, pool=None, obj="mrmr"):
         search to
     """
 
+    assert infoset.hasy, "infoset must include target (cluster) labels"
+
     if pool is None:
-        pool = range(len(adata.uns["clustindices"]))
+        pool = range(infoset.X.shape[1] -1)
 
     start = datetime.datetime.now()
     S = []
     Sset = set()
     H = infoset.H
     for m in range(n):
-        debug(1, "m = {}".format(m))
         maxobj = float("-inf")
         argmaxobj = -1
         if obj == "mim" or m == 0:
@@ -93,21 +94,24 @@ def mutualinfo(infoset, n, pool=None, obj="mrmr"):
         # common for all objectives
         S.append(argmaxobj)
         Sset.add(argmaxobj)
-        info(2, "Features: {}".format(S))
+        info("Features: {}".format(repr(S)))
     end = datetime.datetime.now()
     timedelta = end - start
     info(
-        1,
         "It took {:.2f} minutes to find {} features via {}.".format(
             timedelta.total_seconds() / 60, n, obj
-        ),
+        )
     )
     return S
 
 
 class InformationSet:
-    def __init__(self, X):
-        self.X = X
+    def __init__(self, X, y=None):
+        self.hasy = not y is None
+        if self.hasy:
+            self.X = np.c_[X, y]
+        else:
+            self.X = X
         self.N = X.shape[0]
         self._H = {}
         self._shift = int(np.log2(X.max()) + 1)
@@ -160,4 +164,3 @@ class InformationSet:
             for U in combinations(S, k):
                 ret += ((-1) ** k) * self.H(U + (x,))
         return ret
-
