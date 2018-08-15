@@ -12,7 +12,6 @@ PicturedRocks is a tool for the analysis of single cell RNA-seq data. Currently,
    :maxdepth: 2
    :caption: Contents:
 
-   rocks
    performance
 
 
