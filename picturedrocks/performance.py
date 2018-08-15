@@ -26,6 +26,22 @@ from .read import process_clusts
 
 
 def kfoldindices(n, k, random=False):
+    """Generate indices for k-fold cross validation
+
+    Args
+    ----
+    n: int
+        number of observations
+    k: int
+        number of folds
+    random: bool
+        determines whether to randomize the order
+
+    Yields
+    ------
+    numpy.ndarray
+        array of indices in each fold
+    """
     basearray = np.arange(n)
     if random:
         np.random.shuffle(basearray)
@@ -43,8 +59,12 @@ def kfoldindices(n, k, random=False):
 class PerformanceReport:
     """Report actual vs predicted statistics
     
-    :param y: actual cluster labels, (N, 1)-shaped numpy array
-    :param yhat: predicted cluster labels, (N, 1)-shaped numpy array
+    Args
+    ----
+    y: numpy.ndarray
+        actual cluster labels, (N, 1)-shaped numpy array
+    yhat: numpy.ndarray
+        predicted cluster labels, (N, 1)-shaped numpy array
     """
 
     def __init__(self, y, yhat):
@@ -83,9 +103,11 @@ class PerformanceReport:
     def getconfusionmatrix(self):
         """Get the confusion matrix for the latest run
         
-        :returns: a numpy array of shape (K, K), with the [i, j] entry being the
-            fraction of cells in cluster i that were predicted to be in cluster
-            j
+        Returns
+        -------
+        numpy.ndarray
+            array of shape (K, K), with the [i, j] entry being the fraction
+            of cells in cluster i that were predicted to be in cluster j
         """
         K = self.K
         freq_table = np.zeros([K, K])
@@ -98,9 +120,12 @@ class PerformanceReport:
         return freq_table
 
     def confusionmatrixfigure(self):
-        """Compute and make a confusion matrix plotly figure
+        """Compute and make a confusion matrix figure
         
-        :returns: a plotly figure of a confusion matrix
+        Returns
+        -------
+        `plotly figure`
+            confusion matrix 
         """
         freq_table = self.getconfusionmatrix()
         shape = freq_table.shape
@@ -146,11 +171,15 @@ class PerformanceReport:
 class FoldTester:
     """Performs K-fold Cross Validation for Marker Selection
 
-    :param adata: an AnnData object
+    :class:`FoldTester` can be used to evaluate various marker selection
+    algorithms. It can split the data in `K` folds, run marker selection
+    algorithms on these folds, and classify data based on testing and
+    training data.
 
-    `FoldTester` can be used to evaluate various marker selection algorithms. It
-    can split the data in K folds, run marker selection algorithms on these
-    folds, and classify data based on testing and training data.
+    Args
+    ----
+    adata: anndata.AnnData
+        data to slice into folds
     """
 
     def __init__(self, adata):
@@ -163,17 +192,24 @@ class FoldTester:
     def makefolds(self, k=5, random=False):
         """Makes folds
 
-        :param k: the value of K
-        :param random: if true, `makefolds` will make folds randomly. Otherwise,
-            the folds are made in order (i.e., the first ceil(N/k) cells in the
-            first fold, etc.)
+        Args
+        ----
+        k: int
+            the value of K
+        random: bool
+            If true, `makefolds` will make folds randomly. Otherwise, the
+            folds are made in order (i.e., the first ``ceil(N / k)`` cells in
+            the first fold, etc.)
         """
         self.folds = list(kfoldindices(self.adata.n_obs, k, random))
 
     def savefolds(self, file):
         """Save folds to a file
 
-        :param file: filename to save (typically with a `.npz` extension
+        Args
+        ----
+        file: str
+            filename to save (typically with a ``.npz`` extension)
         """
         d = {"k": len(self.folds), "y": self.adata.obs["y"].values}
         for i, f in enumerate(self.folds):
@@ -183,9 +219,13 @@ class FoldTester:
     def loadfolds(self, file):
         """Load folds from a file
 
-        The file can be one saved either by `savefolds` or
-        `savefoldsandmarkers`. In the latter case, it will not load any markers.
-        See `loadfoldsandmarkers`.
+        The file can be one saved either by :meth:`FoldTester.savefolds` or
+        :meth:`FoldTester.savefoldsandmarkers`. In the latter case, it will
+        not load any markers.
+
+        See Also
+        --------
+        :meth:`FoldTester.loadfoldsandmarkers`.
         """
         d = np.load(file)
         k = d["k"]
@@ -196,6 +236,12 @@ class FoldTester:
         assert self.validatefolds(), "folds are not partition of indices"
 
     def validatefolds(self):
+        """Ensure that all observations are in exactly one fold
+        
+        Returns
+        -------
+        bool
+        """
         counts = np.zeros(self.adata.n_obs)
         for f in self.folds:
             counts[f] += 1
@@ -204,8 +250,11 @@ class FoldTester:
     def selectmarkers(self, select_function):
         """Perform a marker selection algorithm on each fold
 
-        :param select_function: a function that takes in an AnnData object and
-            outputs a list of markers, given by index (of the numpy array)
+        Args
+        ----
+        select_function: function
+            a function that takes in an :class:`AnnData <anndata.AnnData>`
+            object and outputs a list of gene markers, given by their index 
         """
         k = len(self.folds)
         self.markers = []
@@ -219,11 +268,14 @@ class FoldTester:
         """Classify each cell using training data from other folds
 
         For each fold, we project the data onto the markers selected for that
-        fold, which we treat as test data. We also project the complement of the
-        fold and treat that as training data.
+        fold, which we treat as test data. We also project the complement of
+        the fold and treat that as training data.
 
-        :param classifier: a classifier that trains with a training data set and
-            predicts labels of test data. See `NearestCentroidClassifier` for an
+        Args
+        ----
+        classifier
+            a classifier that trains with a training data set and predicts
+            labels of test data. See `NearestCentroidClassifier` for an
             example.
         """
         self.yhat = np.zeros(self.adata.n_obs, dtype=int) - 1
@@ -238,10 +290,13 @@ class FoldTester:
     def savefoldsandmarkers(self, file):
         """Save folds and markers for each fold
 
-        This saves folds, and for each fold, the markers found by
-        `selectmarkers`.
+        This saves folds, and for each fold, the markers previously found by
+        :meth:`FoldTester.selectmarkers`.
 
-        :param file: filename to save to (typically with a `.npz` extension)
+        Args
+        ----
+        file: str
+            filename to save to (typically with a ``.npz`` extension)
         """
         d = {"k": len(self.folds), "y": self.adata.obs["y"]}
         for i, f in enumerate(self.folds):
@@ -253,7 +308,17 @@ class FoldTester:
     def loadfoldsandmarkers(self, file):
         """Load folds and markers
 
-        Loads a folds and markers file saved by `savefoldsandmarkers`
+        Loads a folds and markers file saved by
+        :meth:`FoldTester.savefoldsandmarkers`
+
+        Args
+        ----
+        file: str
+            filename to load from (typically with a ``.npz`` extension)
+        
+        See Also
+        --------
+        :meth:`FoldTester.loadfolds`
         """
         d = np.load(file)
         k = d["k"]

@@ -20,9 +20,28 @@ from scipy.sparse.linalg import svds
 import numpy as np
 
 
-def pca(data, dim=3, center=True, copy=False):
+def pca(adata, dim=3, center=True, copy=False):
+    """Runs PCA
+
+    Args
+    ----
+    adata: anndata.AnnData
+        input data
+    dim: int, optional
+        number of PCs to compute
+    center: bool, optional
+        determines whether to center data before running PCA
+    copy: 
+        determines whether a copy of `AnnData` object is returned
+
+    Returns
+    -------
+    anndata.AnnData
+        object with ``obsm["X_pca"]``, ``varm["PCs"]``, and ``uns["num_pcs"]`` set
+    """
+
     if isinstance(data, AnnData):
-        adata = data.copy() if copy else data
+        adata = adata.copy() if copy else adata
         Xcent, pcs, Xpca = pca(adata.X, dim=dim, center=center)
         adata.obsm["X_pca"] = Xpca
         adata.varm["PCs"] = pcs

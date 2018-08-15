@@ -32,11 +32,14 @@ sys.path.insert(0, os.path.abspath('..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
+    'sphinxcontrib.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages']
+
+napoleon_google_docstring = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -88,7 +91,7 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'haiku'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -174,7 +177,17 @@ texinfo_documents = [
 ]
 
 
+primary_domain = "py"
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+#intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = dict(
+    python=('https://docs.python.org/3', None),
+    numpy=('https://docs.scipy.org/doc/numpy/', None),
+    scipy=('https://docs.scipy.org/doc/scipy/reference/', None),
+    pandas=('http://pandas.pydata.org/pandas-docs/stable/', None),
+    matplotlib=('https://matplotlib.org/', None),
+    anndata=('https://anndata.readthedocs.io/en/latest/', None),
+    scanpy=('https://scanpy.readthedocs.io/en/latest/', None),
+)

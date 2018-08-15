@@ -23,6 +23,31 @@ import numpy as np
 
 
 def read_clusts(adata, filename, sep=",", copy=False):
+    """Read cluster labels from a csv
+
+    Args
+    ----
+    adata: anndata.AnnData
+        the `AnnData` object to read labels into
+    filename: str
+        filename of the csv file with labels
+    sep: str, optional
+        csv delimiter 
+    copy: bool
+        determines whether a copy of `AnnData` object is returned
+
+    Returns
+    -------
+    anndata.AnnData
+        object with cluster labels
+    
+    Notes
+    -----
+     * Cluster ids will automatically be changed so they are 0-indexed
+     * csv can either be two columns (in which case the first column is treated
+       as observation label and merging handled by pandas) or one column (only
+       cluster labels, ordered as in ``adata``)
+    """
     adata = adata.copy() if copy else adata
     clustdf = pd.read_csv(filename, sep=sep)
     if clustdf.shape[1] == 2:
@@ -48,6 +73,27 @@ def read_clusts(adata, filename, sep=",", copy=False):
 
 
 def process_clusts(adata, copy=False):
+    """Annotate with information about clusters
+
+    Precomputes cluster indices, number of clusters, etc.
+
+    Args
+    ----
+    adata: anndata.AnnData
+    copy: bool
+        determines whether a copy of `AnnData` object is returned
+
+    Return
+    -------
+    anndata.AnnData
+        object with annotation
+
+    Notes
+    ------
+    The information computed here is lost when saving as a `.loom` file. If a
+    `.loom` file has cluster information, you should run this function
+    immediately after :func:`sc.read_loom <scanpy.api.read_loom>`.
+    """
     adata = adata.copy() if copy else adata
     adata.obs["clust"] = adata.obs["clust"].astype("category")
     adata.uns["num_clusts"] = adata.obs["clust"].cat.categories.size

@@ -26,10 +26,9 @@ from .preprocessing import pca
 def _deep_merge_dict(source, destination):
     """Merges dict-like objects in a deep manner
 
-    e.g., if source =  {'a': {'b': 5}, 'c': 4} and
-    destination = {'a': {'b': 1, 'bb': 0},'d': 0}
-    then destination is changed **in place** to 
-    {'a': {'b': 5, 'bb': 0}, 'c': 4, 'd': 0}
+    e.g., if source = {'a': {'b': 5}, 'c': 4} and destination = {'a': {'b':
+    1, 'bb': 0},'d': 0} then destination is changed **in place** to {'a':
+    {'b': 5, 'bb': 0}, 'c': 4, 'd': 0}
     """
 
     for key in source.keys():
@@ -53,12 +52,19 @@ def _scatter(coords, *args, **kwargs):
 def genericplot(celldata, coords, **scatterkwargs):
     """Generate a figure for some embedding of data
 
-    This function supports both 2D and 3D plots. This may be used to plot data
-    for any embedding (e.g., PCA or t-SNE). For example usage, see code for
-    `pcafigure`.
+    This function supports both 2D and 3D plots. This may be used to plot
+    data for any embedding (e.g., PCA or t-SNE). For example usage, see code
+    for `pcafigure`.
 
-    :param celldata: an AnnData object
-    :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
+    Args
+    ----
+    celldata: anndata.AnnData
+        data to plot
+    coords: numpy.ndarray
+        (N, 2) or (N, 3) shaped coordinates of the embedded data 
+    **scatterkwargs
+        keyword arguments to pass to ``Scatter`` or ``Scatter3D`` in `plotly`
+        (dictionaries are merged recursively)
     """
 
     clusterindices = celldata.uns["clusterindices"]
@@ -91,7 +97,13 @@ def genericplot(celldata, coords, **scatterkwargs):
 def pcafigure(celldata, **scatterkwargs):
     """Make a 3D PCA figure for an AnnData object
 
-    :param celldata: an AnnData object
+    Args
+    ----
+    celldata: anndata.AnnData
+        data to plot
+    **scatterkwargs
+        keyword arguments to pass to ``Scatter`` or ``Scatter3D`` in `plotly`
+        (dictionaries are merged recursively)
     """
     if "X_pca" not in celldata.obsm_keys() or celldata.uns["num_pcs"] < 3:
         print("Need 3 PCs. Calculating now.")
@@ -105,10 +117,19 @@ def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
     This can be used with any 2D or 3D embedding (e.g., PCA or t-SNE). For
     example code, see `pcawrongplot`.
 
-    :param celldata: an AnnData object
-    :param coords: a (N, 2) or (N, 3) shaped array with coordinates to plot
-    :param yhat: (N, 1) shaped array of predicted/guessed y values
-    :param labels: (optional) list of axis titles
+    Args
+    ----
+    celldata: anndata.AnnData
+        data to plot
+    coords: numpy.ndarray
+        (N, 2) or (N, 3) shaped array with coordinates to plot
+    yhat: numpy.ndarray
+        (N, 1) shaped array of predicted `y` values
+    labels: list, optional
+        list of axis titles
+    **scatterkwargs
+        keyword arguments to pass to ``Scatter`` or ``Scatter3D`` in `plotly`
+        (dictionaries are merged recursively)
     """
 
     y = celldata.obs["y"]
@@ -167,8 +188,15 @@ def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
 def pcawrongplot(celldata, yhat, **scatterkwargs):
     """Generate a 3D PCA figure with incorrectly classified points highlighted
 
-    :param celldata: an AnnData object
-    :param yhat: computed (guessed) y vector
+    Args
+    ----
+    celldata: anndata.AnnData
+        data to plot
+    yhat: numpy.ndarray
+        (N, 1) shaped array of predicted `y` values
+    **scatterkwargs
+        keyword arguments to pass to ``Scatter`` or ``Scatter3D`` in `plotly`
+        (dictionaries are merged recursively)
     """
 
     if "X_pca" not in celldata.obsm_keys() or celldata.uns["num_pcs"] < 3:
@@ -186,14 +214,21 @@ def pcawrongplot(celldata, yhat, **scatterkwargs):
 def plotgeneheat(celldata, coords, genes, **scatterkwargs):
     """Generate gene heat plot for some embedding of AnnData
 
-    This generates a figure with multiple dropdown options. The first option is
-    "Clust" for a plot similar to `genericplot`, and the remaining dropdown
-    options correspond to genes specified in `genes`. When `celldata.genes` is
-    defined, these drop downs are labeled with the gene names.
+    This generates a figure with multiple dropdown options. The first option
+    is "Clust" for a plot similar to `genericplot`, and the remaining
+    dropdown options correspond to genes specified in `genes`. When
+    `celldata.genes` is defined, these drop downs are labeled with the gene
+    names.
 
-    :param celldata: an AnnData object
-    :param coords: (N, 2) or (N, 3) shaped coordinates of the embedded data 
-    :param genes: list of gene indices or gene names
+    Args
+    ----
+    celldata: anndata.AnnData
+        data to plot
+    coords: numpy.ndarray
+        (N, 2) or (N, 3) shaped coordinates of the embedded data (e.g., PCA
+        or tSNE)
+    genes: list
+        list of gene indices or gene names
     """
 
     numclusts = celldata.uns["num_clusts"]

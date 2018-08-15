@@ -6,12 +6,21 @@
 PicturedRocks--Single Cell RNA-seq Analysis Tool
 ================================================
 
-PicturedRocks is a tool for the analysis of single cell RNA-seq data. Currently, we implement two marker selection approaches: a 1-bit compressed sensing based sparse SVM algorithm and a mutual information-based Max Relevance min Redundancy algorithm.
+PicturedRocks is a tool for the analysis of single cell RNA-seq data.
+Currently, we implement two marker selection approaches: 
+
+* a 1-bit compressed sensing based sparse SVM algorithm, and
+* a mutual information-based greedy feature selection algorithm.
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
    :caption: Contents:
 
+   read
+   preprocessing
+   plot
+   markers
    performance
 
 

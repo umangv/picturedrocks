@@ -28,10 +28,21 @@ def makeinfoset(adata):
 def mutualinfo(infoset, n, pool=None, obj="mrmr"):
     """Compute markers using mutual information
 
-    :param infoset: an InformationSet object
-    :param n: the number of markers to select
-    :param pool: (optional) pool of genes to restrict marker selection
-        search to
+    Args
+    ----
+    infoset: picturedrocks.markers.InformationSet
+        discrete gene expression matrix
+    n: int
+        number of markers to select
+    pool: list, optional
+        pool of genes to restrict marker selection search 
+    obj: {"mrmr", "mim", "cife", "jmi", "deg3"}
+        objective function to use
+    
+    Returns
+    -------
+    list
+        ``n`` element list of markers
     """
 
     assert infoset.hasy, "infoset must include target (cluster) labels"
@@ -106,6 +117,15 @@ def mutualinfo(infoset, n, pool=None, obj="mrmr"):
 
 
 class InformationSet:
+    """Stores discrete gene expression matrix
+
+    Args
+    ----
+    X: numpy.ndarray
+        a (num_obs, num_vars) shape array with ``dtype`` :class:`int`
+    y: numpy.ndarray, optional
+        a (num_obs,) shape array
+    """
     def __init__(self, X, y=None):
         self.hasy = not y is None
         if self.hasy:
