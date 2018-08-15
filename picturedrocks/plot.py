@@ -33,13 +33,11 @@ def _deep_merge_dict(source, destination):
     """
 
     for key in source.keys():
-        if (
-            isinstance(source[key], collections.Mapping)
-            and key in destination
-        ):
+        if isinstance(source[key], collections.Mapping) and key in destination:
             _deep_merge_dict(source[key], destination[key])
         else:
             destination[key] = source[key]
+
 
 def _scatter(coords, *args, **kwargs):
     """Run the appropriate scatter function"""

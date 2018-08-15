@@ -46,9 +46,10 @@ def read_clusts(adata, filename, sep=",", copy=False):
         warn("Some or all cells not assigned to cluster.")
     return adata
 
+
 def process_clusts(adata, copy=False):
     adata = adata.copy() if copy else adata
-    adata.obs["clust"] = adata.obs['clust'].astype("category")
+    adata.obs["clust"] = adata.obs["clust"].astype("category")
     adata.uns["num_clusts"] = adata.obs["clust"].cat.categories.size
     clusterindices = {}
     for k in range(adata.uns["num_clusts"]):

@@ -37,7 +37,7 @@ def mutualinfo(infoset, n, pool=None, obj="mrmr"):
     assert infoset.hasy, "infoset must include target (cluster) labels"
 
     if pool is None:
-        pool = range(infoset.X.shape[1] -1)
+        pool = range(infoset.X.shape[1] - 1)
 
     start = datetime.datetime.now()
     S = []
