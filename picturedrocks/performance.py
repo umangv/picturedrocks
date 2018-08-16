@@ -20,7 +20,6 @@ import plotly.graph_objs as go
 import scanpy.api as sc
 import scipy.spatial.distance
 from anndata import AnnData
-from plotly.offline import iplot
 
 from .read import process_clusts
 
@@ -164,6 +163,7 @@ class PerformanceReport:
         This uses `iplot`, so we assume this will only be run in a Jupyter
         notebook and that `init_notebook_mode` has already been run.
         """
+        from plotly.offline import iplot
         self.printscore()
         iplot(self.confusionmatrixfigure())
 
