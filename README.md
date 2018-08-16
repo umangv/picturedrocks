@@ -2,26 +2,30 @@
 
 PicturedRocks is a python package that implements some single cell analysis algorithms that we are studying. Currently, we implement two marker selection algorithms:
 
-1. a 1-bit Compressed Sensing algorithm based on [Conrad, et al. BMC bioinformatics '17]
-2. a mutual information based "Maximum Relevance minimum Redundance" algorithm based on [Peng, et al. IEEE TPAMI '05]
+1. 1-bit Compressed Sensing algorithms based on [Conrad, et al. BMC bioinformatics '17]
+2. variants of mutual information based algorithms (e.g., the "minimum Redundance Maximum Relevance" algorithm [Peng, et al. IEEE TPAMI '05])
 
 ## Usage
 
 To install, put the `picturedrocks` directory in your python path (e.g., in the current working directory).
 
-To create a `Rocks` object, you need `X` (the gene expression matrix, a numpy array of shape (N, P) where the dataset has N cells and P rows), `y` (the cluster label vector, an numpy array of shape (N, 1) and dtype `int`), and, optionally, a list of gene names `genes`.
+PicturedRocks in compatible with `scanpy` and uses its `AnnData` objects. Most methods require cluster labels to be loaded. 
 
 ```python
-from picturedrocks import Rocks
-rocks = Rocks(X, y, genes=genes)
+from picturedrocks.read import read_clusts, process_clusts
+adata = read_clusts(adata, "clust_labels.csv")
+adata = process_clusts(adata)
 ```
 
-More detailed information can be found on the [online documentation](https://picturedrocks.github.io/docs/).
+More detailed information can be found on the [online documentation](https://picturedrocks.rtfd.io/).
 
+## Code Style
+
+Pull requests are welcome. Please use [numpy-style docstrings](https://sphinxcontrib-napoleon.rtfd.io/) and format your code with [black](https://black.rtfd.io).
 
 ## Copyright
 
-Copyright © 2017 Anna Gilbert, Alexander Vargo, Umang Varma
+Copyright © 2017, 2018 Anna Gilbert, Alexander Vargo, Umang Varma
 
 PicturedRocks is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
