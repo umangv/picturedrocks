@@ -3,3 +3,6 @@ docs/_build
 *.swp
 *.swo
 .vscode
+build/
+dist/
+picturedrocks.egg-info/
