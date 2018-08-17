@@ -1,11 +1,13 @@
 import setuptools
+import versioneer
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="picturedrocks",
-    version="0.2.0",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author="Anna Gilbert, Alexander Vargo, Umang Varma",
     author_email="uvarma@umich.edu",
     description="Single Cell RNA Sequencing Marker Selection Package",

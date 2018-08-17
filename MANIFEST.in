@@ -1,0 +1,2 @@
+include versioneer.py
+include picturedrocks/_version.py
