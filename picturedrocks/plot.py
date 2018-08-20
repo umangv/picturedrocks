@@ -245,7 +245,7 @@ def plotgeneheat(celldata, coords, genes, **scatterkwargs):
                 color=clustscal[k % len(clustscal)],  # set color to an array/list
                 #                                  of desired values
             ),
-            name="Cluster {}".format(k),
+            name=celldata.obs["clust"].cat.categories[k],
             hoverinfo="name",
         )
         for k, inds in clusterindices.items()
