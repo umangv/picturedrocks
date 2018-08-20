@@ -47,7 +47,7 @@ def pca(data, dim=3, center=True, copy=False):
         adata.varm["PCs"] = pcs
         adata.uns["num_pcs"] = dim
         return adata
-    Xcent = data
+    Xcent = data.copy()
     if center:
         Xcent -= data.mean(axis=0)[np.newaxis, :]
     pcs = svds(Xcent.T, dim, return_singular_vectors="u")[0][:, ::-1]
