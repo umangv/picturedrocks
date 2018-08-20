@@ -20,12 +20,12 @@ from scipy.sparse.linalg import svds
 import numpy as np
 
 
-def pca(adata, dim=3, center=True, copy=False):
+def pca(data, dim=3, center=True, copy=False):
     """Runs PCA
 
     Args
     ----
-    adata: anndata.AnnData
+    data: anndata.AnnData
         input data
     dim: int, optional
         number of PCs to compute
@@ -41,7 +41,7 @@ def pca(adata, dim=3, center=True, copy=False):
     """
 
     if isinstance(data, AnnData):
-        adata = adata.copy() if copy else adata
+        adata = data.copy() if copy else data
         Xcent, pcs, Xpca = pca(adata.X, dim=dim, center=center)
         adata.obsm["X_pca"] = Xpca
         adata.varm["PCs"] = pcs
