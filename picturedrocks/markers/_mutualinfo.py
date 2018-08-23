@@ -16,13 +16,16 @@
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
+import scipy.sparse
 import datetime
 from logging import info
 
 
 def makeinfoset(adata):
     """Discretize data"""
-    return InformationSet(np.log2(adata.X + 1).round().astype(int), adata.obs["y"])
+    # we currently don't support scipy sparse matrices
+    X = adata.X.toarray() if scipy.sparse.issparse(adata.X) else adata.X
+    return InformationSet(np.log2(X + 1).round().astype(int), adata.obs["y"])
 
 
 def mutualinfo(infoset, n, pool=None, obj="mrmr"):
@@ -128,8 +131,13 @@ class InformationSet:
     """
     def __init__(self, X, y=None):
         self.hasy = not y is None
+        # insert a column of zeros; this is our baseline (i.e., it should have a
+        # score of zero always)
+        X = np.c_[X, np.zeros((X.shape[0], 1))]
+        self.baseline_index = -1
         if self.hasy:
             self.X = np.c_[X, y]
+            self.baseline_index -= 1
         else:
             self.X = X
         self.N = X.shape[0]
