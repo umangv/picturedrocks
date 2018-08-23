@@ -251,7 +251,7 @@ def plotgeneheat(celldata, coords, genes, **scatterkwargs):
         for k, inds in clusterindices.items()
     ]
 
-    genes = [g if type(g) == int else celldata.var.index.get_loc(g) for g in genes]
+    genes = [g if isinstance(g, (int, np.integer)) else celldata.var.index.get_loc(g) for g in genes]
     genenames = celldata.var.index[genes].tolist()
 
     geneexpr = celldata.X[:, genes]
