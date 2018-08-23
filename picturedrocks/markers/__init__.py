@@ -16,4 +16,4 @@
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
 from ._mutualinfo import makeinfoset, InformationSet, mutualinfo
-from . import _interactive as interactive
+from . import interactive

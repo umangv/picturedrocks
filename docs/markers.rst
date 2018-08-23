@@ -28,3 +28,8 @@ Auxiliary Classes and Methods
 .. autoclass:: picturedrocks.markers.InformationSet
 .. autofunction:: picturedrocks.markers.makeinfoset
 
+Interactive Marker Selection
+============================
+
+.. automodule:: picturedrocks.markers.interactive
+    :members: InteractiveMarkerSelection,cife_obj

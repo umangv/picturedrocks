@@ -20,13 +20,13 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(".."))
-
-import picturedrocks
-
 # tkinter is causing errors when building on read the docs; don't use it
 import matplotlib
 matplotlib.use('agg')
+
+sys.path.insert(0, os.path.abspath(".."))
+
+import picturedrocks
 
 # -- General configuration ------------------------------------------------
 

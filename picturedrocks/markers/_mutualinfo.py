@@ -129,6 +129,7 @@ class InformationSet:
     y: numpy.ndarray, optional
         a (num_obs,) shape array
     """
+
     def __init__(self, X, y=None):
         self.hasy = not y is None
         # insert a column of zeros; this is our baseline (i.e., it should have a

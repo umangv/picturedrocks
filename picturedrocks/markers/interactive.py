@@ -44,6 +44,7 @@ class InteractiveMarkerSelection:
     picturedrocks. Specifically, please ensure that you have `ipywidgets` and
     `tqdm` installed and that you use this class only inside a jupyter notebook.
     """
+
     def __init__(self, adata, infoset, obj, disp_genes=10, connected=True):
         if _import_errors:
             raise ImportError(f"Unable to import {_import_errors}")
@@ -241,7 +242,7 @@ def cife_obj(H, i, S):
     Returns
     -------
     float
-        the candidate feature's score relative to the 
+        the candidate feature's score relative to the selected gene set `S`
     """
     Sset = set(S)
     m = len(S)
