@@ -19,33 +19,33 @@ except ImportError as e:
 
 
 class InteractiveMarkerSelection:
-    """Run an interactive marker selection GUI inside a jupyter notebook
-
-    Args
-    ----
-    adata: anndata.AnnData
-        The data to run marker selection on. If you want to restrict to a small
-        number of genes, slice your anndata object.
-    infoset: picturedrocks.markers.InformationSet
-        An InformationSet corresponding to `adata`
-    obj: function
-        An objective function (see `cife_obj` for an example)
-    disp_genes: int
-        Number of genes to display as options (by default, number of genes
-        plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
-        setting the `plot_genes` property after initializing.
-    connected: bool
-        Parameter to pass to `plotly.offline.init_notebook_mode`. If your
-        browser does not have internet access, you should set this to False.
-
-    Warning
-    -------
-    This class requires modules not explicitly listed as dependencies of
-    picturedrocks. Specifically, please ensure that you have `ipywidgets` and
-    `tqdm` installed and that you use this class only inside a jupyter notebook.
-    """
-
     def __init__(self, adata, infoset, obj, disp_genes=10, connected=True):
+        """Run an interactive marker selection GUI inside a jupyter notebook
+
+        Args
+        ----
+        adata: anndata.AnnData
+            The data to run marker selection on. If you want to restrict to a small
+            number of genes, slice your anndata object.
+        infoset: picturedrocks.markers.InformationSet
+            An InformationSet corresponding to `adata`
+        obj: function
+            An objective function (see `cife_obj` for an example)
+        disp_genes: int
+            Number of genes to display as options (by default, number of genes
+            plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
+            setting the `plot_genes` property after initializing.
+        connected: bool
+            Parameter to pass to `plotly.offline.init_notebook_mode`. If your
+            browser does not have internet access, you should set this to False.
+
+        Warning
+        -------
+        This class requires modules not explicitly listed as dependencies of
+        picturedrocks. Specifically, please ensure that you have `ipywidgets` and
+        `tqdm` installed and that you use this class only inside a jupyter notebook.
+        """
+
         if _import_errors:
             raise ImportError(f"Unable to import {_import_errors}")
         self.adata = adata

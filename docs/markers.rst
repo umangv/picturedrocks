@@ -31,5 +31,5 @@ Auxiliary Classes and Methods
 Interactive Marker Selection
 ============================
 
-.. automodule:: picturedrocks.markers.interactive
-    :members: InteractiveMarkerSelection,cife_obj
+.. autoclass:: picturedrocks.markers.interactive.InteractiveMarkerSelection
+.. autofunction:: picturedrocks.markers.interactive.cife_obj
