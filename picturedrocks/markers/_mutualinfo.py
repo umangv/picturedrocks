@@ -31,7 +31,7 @@ def makeinfoset(adata, include_y):
     X = np.log2(X + 1).round().astype(int)
     if include_y:
         y = adata.obs["y"]
-        X = np.concatenate([X, y], axis=1)
+        X = np.concatenate([X, y[:,None]], axis=1)
     return InformationSet(X, include_y)
 
 
