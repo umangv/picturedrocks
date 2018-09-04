@@ -21,7 +21,11 @@ expression). Such data is stored in
 using :func:`picturedrocks.markers.makeinfoset` to generate such an object
 after appropriate normalization
 
-.. autofunction:: picturedrocks.markers.mutualinfo
+.. autoclass:: picturedrocks.markers.mutualinformation.iterative.MIM
+.. autoclass:: picturedrocks.markers.mutualinformation.iterative.CIFE
+.. autoclass:: picturedrocks.markers.mutualinformation.iterative.JMI
+.. autoclass:: picturedrocks.markers.mutualinformation.iterative.UniEntropy
+.. autoclass:: picturedrocks.markers.mutualinformation.iterative.CIFEUnsup
 
 Auxiliary Classes and Methods
 +++++++++++++++++++++++++++++
