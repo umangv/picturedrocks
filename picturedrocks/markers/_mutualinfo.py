@@ -19,20 +19,8 @@ import datetime
 from logging import info
 
 import numpy as np
-import scipy.sparse
 
 from picturedrocks.markers.mutualinformation.infoset import InformationSet
-
-
-def makeinfoset(adata, include_y):
-    """Discretize data"""
-    # we currently don't support scipy sparse matrices
-    X = adata.X.toarray() if scipy.sparse.issparse(adata.X) else adata.X
-    X = np.log2(X + 1).round().astype(int)
-    if include_y:
-        y = adata.obs["y"]
-        X = np.concatenate([X, y[:,None]], axis=1)
-    return InformationSet(X, include_y)
 
 
 def mutualinfo(infoset, n, pool=None, obj="mrmr"):

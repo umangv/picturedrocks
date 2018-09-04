@@ -15,5 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
-from ._mutualinfo import makeinfoset, InformationSet
+from . import mutualinformation
+from .mutualinformation.infoset import makeinfoset, InformationSet
+from ._mutualinfo import mutualinfo as mutualinfo_old
 from . import interactive

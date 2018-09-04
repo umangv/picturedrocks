@@ -19,6 +19,34 @@ from logging import info
 
 import numba as nb
 import numpy as np
+import scipy.sparse
+
+
+def makeinfoset(adata, include_y):
+    """Discretize data
+
+    Args
+    ----
+    adata: anndata.AnnData
+        The data to discretize. By default data is discretized as
+        `round(log2(X + 1))`.
+    include_y: bool
+        Determines if the `y` (cluster label) column in included in the 
+        `InformationSet` object
+    
+    Returns
+    -------
+    picturedrocks.markers.mutualinformation.infoset.InformationSet
+        An object that can be used to perform information theoretic
+        calculations.
+    """
+    # we currently don't support scipy sparse matrices
+    X = adata.X.toarray() if scipy.sparse.issparse(adata.X) else adata.X
+    X = np.log2(X + 1).round().astype(int)
+    if include_y:
+        y = adata.obs["y"]
+        X = np.concatenate([X, y[:, None]], axis=1)
+    return InformationSet(X, include_y)
 
 
 @nb.jitclass(
