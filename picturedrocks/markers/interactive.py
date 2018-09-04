@@ -11,15 +11,20 @@ _import_errors = None
 try:
     import ipywidgets as ipyw
     from IPython.display import display
-    from tqdm._tqdm_notebook import tqdm_notebook as tqdm
-
-    tqdm.monitor_interval = False
 except ImportError as e:
     _import_errors = e.name
 
 
 class InteractiveMarkerSelection:
-    def __init__(self, adata, feature_selection, disp_genes=10, connected=True):
+    def __init__(
+        self,
+        adata,
+        feature_selection,
+        disp_genes=10,
+        connected=True,
+        show_cells=True,
+        show_genes=True,
+    ):
         """Run an interactive marker selection GUI inside a jupyter notebook
 
         Args
@@ -39,12 +44,19 @@ class InteractiveMarkerSelection:
         connected: bool
             Parameter to pass to `plotly.offline.init_notebook_mode`. If your
             browser does not have internet access, you should set this to False.
+        show_cells: bool
+            Determines whether to display a tSNE plot of the cells with a
+            drop-down menu to look at gene expression levels for candidate
+            genes.
+        show_genes: bool
+            Determines whether to display a tSNE plot of genes to visualize
+            gene similarity
 
         Warning
         -------
         This class requires modules not explicitly listed as dependencies of
-        picturedrocks. Specifically, please ensure that you have `ipywidgets` and
-        `tqdm` installed and that you use this class only inside a jupyter notebook.
+        picturedrocks. Specifically, please ensure that you have `ipywidgets`
+        installed and that you use this class only inside a jupyter notebook.
         """
 
         if _import_errors:
@@ -52,16 +64,19 @@ class InteractiveMarkerSelection:
         self.adata = adata
         self.featsel = feature_selection
 
+        self.show_genes = show_genes
+        self.show_cells = show_cells
+
         init_notebook_mode(connected=connected)
 
-        if not "gene_tsne" in self.adata.varm_keys():
+        if show_genes and "gene_tsne" not in self.adata.varm_keys():
             print("Running tSNE on genes...")
             p = PCA(n_components=30)
             t = TSNE()
             self.adata.varm["gene_pca"] = p.fit_transform(self.adata.X.T)
             self.adata.varm["gene_tsne"] = t.fit_transform(self.adata.varm["gene_pca"])
 
-        if not "X_tsne" in self.adata.obsm_keys():
+        if show_cells and "X_tsne" not in self.adata.obsm_keys():
             print("Running tSNE on cells...")
             p = PCA(n_components=30)
             t = TSNE()
@@ -111,36 +126,44 @@ class InteractiveMarkerSelection:
         top_genes_plot = top_gene_inds[: self.plot_genes]
         self.out_plot.clear_output()
         with self.out_plot:
-            iplot(
-                pr.plot.plotgeneheat(
-                    self.adata,
-                    self.adata.obsm["X_tsne"],
-                    top_gene_inds[: self.disp_genes].tolist() + self.featsel.S,
+            if self.show_cells:
+                iplot(
+                    pr.plot.plotgeneheat(
+                        self.adata,
+                        self.adata.obsm["X_tsne"],
+                        top_gene_inds[: self.disp_genes].tolist() + self.featsel.S,
+                    )
                 )
-            )
-            iplot(
-                go.Figure(
-                    data=[
-                        go.Scatter(
-                            x=self.adata.varm["gene_tsne"][top_genes_plot, 0],
-                            y=self.adata.varm["gene_tsne"][top_genes_plot, 1],
-                            text=self.adata.var_names.values.astype(str)[
-                                top_genes_plot
-                            ],
-                            mode="markers",
-                            hoverinfo="text",
-                            marker=dict(
-                                size=(scaled_scores[top_genes_plot] * 16).astype(int),
-                                color=np.array(cl.scales["9"]["seq"]["Blues"])[
-                                    (3 + 5 * scaled_scores[top_genes_plot].astype(int))
+            if self.show_genes:
+                iplot(
+                    go.Figure(
+                        data=[
+                            go.Scatter(
+                                x=self.adata.varm["gene_tsne"][top_genes_plot, 0],
+                                y=self.adata.varm["gene_tsne"][top_genes_plot, 1],
+                                text=self.adata.var_names.values.astype(str)[
+                                    top_genes_plot
                                 ],
-                                line=go.scatter.marker.Line(color="black", width=1),
-                            ),
-                        )
-                    ],
-                    layout=go.Layout(hovermode="closest"),
+                                mode="markers",
+                                hoverinfo="text",
+                                marker=dict(
+                                    size=(scaled_scores[top_genes_plot] * 16).astype(
+                                        int
+                                    ),
+                                    color=np.array(cl.scales["9"]["seq"]["Blues"])[
+                                        (
+                                            3
+                                            + 5
+                                            * scaled_scores[top_genes_plot].astype(int)
+                                        )
+                                    ],
+                                    line=go.scatter.marker.Line(color="black", width=1),
+                                ),
+                            )
+                        ],
+                        layout=go.Layout(hovermode="closest"),
+                    )
                 )
-            )
 
     def _next_gene_row(self, gene_ind, score):
         but = ipyw.Button(
