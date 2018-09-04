@@ -17,6 +17,7 @@
 
 import datetime
 from logging import info
+from abc import ABC, abstractmethod
 
 import numba as nb
 import numpy as np
@@ -124,6 +125,83 @@ def mutualinfo(infoset, n, pool=None, obj="mrmr"):
     )
     return S
 
+
+class IterativeFeatureSelection(ABC):
+    @abstractmethod
+    def __init__(self, infoset):
+        self.infoset = infoset
+        self.score = None
+        self.S = []
+
+    @abstractmethod
+    def add(self, ind):
+        pass
+
+    @abstractmethod
+    def remove(self, ind):
+        pass
+
+    def autoselect(self, n_feats):
+        for i in range(n_feats):
+            best = np.argmax(self.score)
+            self.add(best)
+
+
+class CIFE(IterativeFeatureSelection):
+    def __init__(self, infoset):
+        assert infoset.has_y, "Information Set must have target labels"
+        self.infoset = infoset
+        self.S = []
+        self.base_score = (
+            self.infoset.entropy_wrt(np.arange(0))
+            + self.infoset.entropy(np.array([-1]))
+            - self.infoset.entropy_wrt(np.array([-1]))
+        )
+        self.penalty = np.zeros(len(self.base_score))
+        self.score = self.base_score[:]
+
+    def add(self, ind):
+        self.S.append(ind)
+        penalty_delta = (
+            self.base_score
+            + self.infoset.entropy(np.array([ind]))
+            - self.infoset.entropy_wrt(np.array([ind]))
+            - self.infoset.entropy(np.array([-1, ind]))
+            + self.infoset.entropy_wrt(np.array([-1, ind]))
+        )
+        self.penalty += penalty_delta
+        self.score = self.base_score - self.penalty
+        self.score[self.S] = float("-inf")
+    
+    def remove(self, ind):
+        raise NotImplementedError("Remove has not been implemented yet")
+
+class MIM(IterativeFeatureSelection):
+    def __init__(self, infoset):
+        assert infoset.has_y, "Information Set must have target labels"
+        self.infoset = infoset
+        self.S = []
+        self.base_score = (
+            self.infoset.entropy_wrt(np.arange(0))
+            + self.infoset.entropy(np.array([-1]))
+            - self.infoset.entropy_wrt(np.array([-1]))
+        )
+        self.score = self.base_score.copy()
+
+    def add(self, ind):
+        self.S.append(ind)
+        self.score = self.base_score.copy()
+        self.score[self.S] = float("-inf")
+
+    def remove(self, ind):
+        raise NotImplementedError("Remove has not been implemented yet")
+
+    def autoselect(self, n_feats):
+        nbest = np.argpartition(self.score, -n_feats)[-n_feats:]
+        nbest = nbest[np.argsort(self.score[nbest])[::-1]]
+        self.S.extend(nbest)
+        self.score[self.S] = float("-inf")
+        return nbest
 
 @nb.jitclass(
     [
