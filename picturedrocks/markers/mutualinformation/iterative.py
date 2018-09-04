@@ -55,8 +55,8 @@ class CIFE(MIMixin, IterativeFeatureSelection):
             + self.infoset.entropy_wrt(np.array([-1, ind]))
         )
         self.penalty += penalty_delta
-        self.score = self.base_score - self.penalty
-        self.score[self.S] = float("-inf")
+        self.score -= penalty_delta
+        self.score[ind] = float("-inf")
 
     def remove(self, ind):
         self.S.remove(ind)
@@ -117,8 +117,8 @@ class CIFEUnsup(EntropyMixin, IterativeFeatureSelection):
             - self.infoset.entropy_wrt(np.array([ind]))  # H(x_i, x_j)
         )
         self.penalty += penalty_delta
-        self.score = self.base_score - self.penalty
-        self.score[self.S] = float("-inf")
+        self.score -= penalty_delta
+        self.score[ind] = float("-inf")
 
     def remove(self, ind):
         self.S.remove(ind)
