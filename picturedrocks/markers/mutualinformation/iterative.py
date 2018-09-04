@@ -1,4 +1,3 @@
-
 # Copyright © 2018 Anna Gilbert, Alexander Vargo, Umang Varma
 #
 # This file is part of PicturedRocks.
@@ -16,31 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
-from abc import ABC, abstractmethod
-import numba as nb
 import numpy as np
 import scipy.sparse
 
-
-class IterativeFeatureSelection(ABC):
-    @abstractmethod
-    def __init__(self, infoset):
-        self.infoset = infoset
-        self.score = None
-        self.S = []
-
-    @abstractmethod
-    def add(self, ind):
-        pass
-
-    @abstractmethod
-    def remove(self, ind):
-        pass
-
-    def autoselect(self, n_feats):
-        for i in range(n_feats):
-            best = np.argmax(self.score)
-            self.add(best)
+from picturedrocks.markers._iterative import IterativeFeatureSelection, UnivariateMixin
 
 
 class MIMixin:
@@ -64,23 +42,6 @@ class EntropyMixin:
         self.base_score = self.infoset.entropy_wrt(np.arange(0))
         self.penalty = np.zeros(len(self.base_score))
         self.score = self.base_score.copy()
-
-
-class UnivariateMixin:
-    def add(self, ind):
-        self.S.append(ind)
-        self.score[ind] = float("-inf")
-
-    def remove(self, ind):
-        self.S.remove(ind)
-        self.score[ind] = self.base_score[ind]
-
-    def autoselect(self, n_feats):
-        nbest = np.argpartition(self.score, -n_feats)[-n_feats:]
-        nbest = nbest[np.argsort(self.score[nbest])[::-1]]
-        self.S.extend(nbest)
-        self.score[nbest] = float("-inf")
-        return nbest
 
 
 class CIFE(MIMixin, IterativeFeatureSelection):
