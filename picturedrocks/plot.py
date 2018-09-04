@@ -211,7 +211,7 @@ def pcawrongplot(celldata, yhat, **scatterkwargs):
     )
 
 
-def plotgeneheat(celldata, coords, genes, **scatterkwargs):
+def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
     """Generate gene heat plot for some embedding of AnnData
 
     This generates a figure with multiple dropdown options. The first option
@@ -229,29 +229,42 @@ def plotgeneheat(celldata, coords, genes, **scatterkwargs):
         or tSNE)
     genes: list
         list of gene indices or gene names
+    hide_clusts: bool
+        Determines if cluster labels are ignored even if they are available
     """
 
-    numclusts = celldata.uns["num_clusts"]
-    clusterindices = celldata.uns["clusterindices"]
     clustscal = cl.scales["9"]["qual"]["Set1"]
     genescal = np.array(cl.scales["8"]["seq"]["Blues"])
+    if (not hide_clusts) and "y" in celldata.obs_keys():
+        first_label = "Clust"
+        numclusts = celldata.uns["num_clusts"]
+        clusterindices = celldata.uns["clusterindices"]
 
-    plotbyclust = [
-        _scatter(
-            coords[inds],
-            mode="markers",
-            marker=dict(
-                size=4,
-                color=clustscal[k % len(clustscal)],  # set color to an array/list
-                #                                  of desired values
-            ),
-            name=celldata.obs["clust"].cat.categories[k],
-            hoverinfo="name",
-        )
-        for k, inds in clusterindices.items()
+        plotbyclust = [
+            _scatter(
+                coords[inds],
+                mode="markers",
+                marker=dict(
+                    size=4,
+                    color=clustscal[k % len(clustscal)],  # set color to an array/list
+                    #                                  of desired values
+                ),
+                name=celldata.obs["clust"].cat.categories[k],
+                hoverinfo="name",
+            )
+            for k, inds in clusterindices.items()
+        ]
+    else:
+        first_label = "Cells"
+        numclusts = 1
+        plotbyclust = [
+            _scatter(coords, mode="markers", marker=dict(size=4), name="cells")
+        ]
+
+    genes = [
+        g if isinstance(g, (int, np.integer)) else celldata.var.index.get_loc(g)
+        for g in genes
     ]
-
-    genes = [g if isinstance(g, (int, np.integer)) else celldata.var.index.get_loc(g) for g in genes]
     genenames = celldata.var.index[genes].tolist()
 
     geneexpr = celldata.X[:, genes]
@@ -274,7 +287,7 @@ def plotgeneheat(celldata, coords, genes, **scatterkwargs):
     ]
     buttons = [
         dict(
-            label="Clust",
+            label=first_label,
             method="update",
             args=[{"visible": [True] * numclusts + [False] * numgenes}, {}],
         )
