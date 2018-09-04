@@ -73,8 +73,7 @@ class UnivariateMixin:
 
     def remove(self, ind):
         self.S.remove(ind)
-        self.score = self.base_score.copy()
-        self.score[self.S] = float("-inf")
+        self.score[ind] = self.base_score[ind]
 
     def autoselect(self, n_feats):
         nbest = np.argpartition(self.score, -n_feats)[-n_feats:]
@@ -99,7 +98,45 @@ class CIFE(MIMixin, IterativeFeatureSelection):
         self.score[self.S] = float("-inf")
 
     def remove(self, ind):
-        raise NotImplementedError("Remove has not been implemented yet")
+        self.S.remove(ind)
+        penalty_delta = (
+            self.base_score
+            + self.infoset.entropy(np.array([ind]))
+            - self.infoset.entropy_wrt(np.array([ind]))
+            - self.infoset.entropy(np.array([-1, ind]))
+            + self.infoset.entropy_wrt(np.array([-1, ind]))
+        )
+        self.penalty -= penalty_delta
+        self.score = self.base_score - self.penalty
+        self.score[self.S] = float("-inf")
+
+
+class JMI(MIMixin, IterativeFeatureSelection):
+    def add(self, ind):
+        self.S.append(ind)
+        penalty_delta = (
+            self.base_score
+            + self.infoset.entropy(np.array([ind]))
+            - self.infoset.entropy_wrt(np.array([ind]))
+            - self.infoset.entropy(np.array([-1, ind]))
+            + self.infoset.entropy_wrt(np.array([-1, ind]))
+        )
+        self.penalty += penalty_delta
+        self.score = self.base_score - (self.penalty / len(self.S))
+        self.score[self.S] = float("-inf")
+
+    def remove(self, ind):
+        self.S.remove(ind)
+        penalty_delta = (
+            self.base_score
+            + self.infoset.entropy(np.array([ind]))
+            - self.infoset.entropy_wrt(np.array([ind]))
+            - self.infoset.entropy(np.array([-1, ind]))
+            + self.infoset.entropy_wrt(np.array([-1, ind]))
+        )
+        self.penalty -= penalty_delta
+        self.score = self.base_score - (self.penalty / len(self.S))
+        self.score[self.S] = float("-inf")
 
 
 class MIM(MIMixin, UnivariateMixin, IterativeFeatureSelection):
@@ -114,14 +151,23 @@ class CIFEUnsup(EntropyMixin, IterativeFeatureSelection):
     def add(self, ind):
         self.S.append(ind)
         penalty_delta = (
-            self.base_score # H(x_i)
-            + self.infoset.entropy(np.array([ind])) # H(x_j)
-            - self.infoset.entropy_wrt(np.array([ind])) # H(x_i, x_j)
+            self.base_score  # H(x_i)
+            + self.infoset.entropy(np.array([ind]))  # H(x_j)
+            - self.infoset.entropy_wrt(np.array([ind]))  # H(x_i, x_j)
         )
         self.penalty += penalty_delta
         self.score = self.base_score - self.penalty
         self.score[self.S] = float("-inf")
 
     def remove(self, ind):
-        raise NotImplementedError("Remove has not been implemented yet")
+        self.S.remove(ind)
+        penalty_delta = (
+            self.base_score  # H(x_i)
+            + self.infoset.entropy(np.array([ind]))  # H(x_j)
+            - self.infoset.entropy_wrt(np.array([ind]))  # H(x_i, x_j)
+        )
+        self.penalty -= penalty_delta
+        self.score = self.base_score - self.penalty
+        self.score[self.S] = float("-inf")
+
     pass
