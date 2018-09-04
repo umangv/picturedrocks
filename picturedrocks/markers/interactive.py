@@ -19,7 +19,7 @@ except ImportError as e:
 
 
 class InteractiveMarkerSelection:
-    def __init__(self, adata, infoset, obj, disp_genes=10, connected=True):
+    def __init__(self, adata, feature_selection, disp_genes=10, connected=True):
         """Run an interactive marker selection GUI inside a jupyter notebook
 
         Args
@@ -27,10 +27,11 @@ class InteractiveMarkerSelection:
         adata: anndata.AnnData
             The data to run marker selection on. If you want to restrict to a small
             number of genes, slice your anndata object.
-        infoset: picturedrocks.markers.InformationSet
-            An InformationSet corresponding to `adata`
-        obj: function
-            An objective function (see `cife_obj` for an example)
+        feature_selection: picturedrocks.markers.mutualinformation.iterative.IterativeFeatureSelection
+            An instance of a interative feature selection algorithm class
+            that corresponds to `adata` (i.e., the column indices in
+            `feature_selection` should correspond to the column indices in
+            `adata`)
         disp_genes: int
             Number of genes to display as options (by default, number of genes
             plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
@@ -49,11 +50,7 @@ class InteractiveMarkerSelection:
         if _import_errors:
             raise ImportError(f"Unable to import {_import_errors}")
         self.adata = adata
-        self.infoset = infoset
-        self.obj = obj
-        self.S = []
-        self.pool = np.arange(adata.n_vars)
-        self.scores = np.zeros(len(self.pool))
+        self.featsel = feature_selection
 
         init_notebook_mode(connected=connected)
 
@@ -84,36 +81,30 @@ class InteractiveMarkerSelection:
                 ipyw.VBox([ipyw.HBox([self.out_next, self.out_cur]), self.out_plot])
             )
 
-    def compute_redraw(self):
-        """Recompute scores and redraw jupyter widgets"""
-        H = self.infoset.H
+    def redraw(self):
+        """Redraw jupyter widgets"""
         self.out_next.children = []
         self.out_cur.children = []
 
         self.out_plot.clear_output()
 
-        with self.out_plot:
-            self.scores = np.array([self.obj(H, i, self.S) for i in tqdm(self.pool)])
-        baseline_score = self.obj(H, self.infoset.baseline_index, self.S)
-        self.scores -= baseline_score
-
-        top_gene_inds = np.argsort(self.scores)[::-1]
+        top_gene_inds = np.argsort(self.featsel.score)[::-1]
 
         self.out_next.children = (
             [ipyw.Label("Candidate Next Gene")]
             + [
-                self._next_gene_row(gene_ind, self.scores[gene_ind])
+                self._next_gene_row(gene_ind, self.featsel.score[gene_ind])
                 for gene_ind in top_gene_inds[: self.disp_genes]
             ]
             + [self._other_next_gene()]
         )
 
         self.out_cur.children = [ipyw.Label("Currently selected genes")] + [
-            self._cur_gene_row(gene_ind) for gene_ind in self.S
+            self._cur_gene_row(gene_ind) for gene_ind in self.featsel.S
         ]
 
-        ninfscores = self.scores == float("-inf")
-        scaled_scores = self.scores - self.scores[~ninfscores].min()
+        ninfscores = self.featsel.score == float("-inf")
+        scaled_scores = self.featsel.score - self.featsel.score[~ninfscores].min()
         scaled_scores[scaled_scores < 0] = 0
         scaled_scores = scaled_scores / scaled_scores.max()
 
@@ -124,7 +115,7 @@ class InteractiveMarkerSelection:
                 pr.plot.plotgeneheat(
                     self.adata,
                     self.adata.obsm["X_tsne"],
-                    top_gene_inds[: self.disp_genes].tolist() + self.S,
+                    top_gene_inds[: self.disp_genes].tolist() + self.featsel.S,
                 )
             )
             iplot(
@@ -159,8 +150,8 @@ class InteractiveMarkerSelection:
         )
 
         def add_cur_gene(b):
-            self.S.append(gene_ind)
-            self.compute_redraw()
+            self.featsel.add(gene_ind)
+            self.redraw()
 
         but.on_click(add_cur_gene)
         return ipyw.HBox(
@@ -175,8 +166,8 @@ class InteractiveMarkerSelection:
 
     def _cur_gene_row(self, gene_ind):
         def del_cur_gene(b):
-            self.S.remove(gene_ind)
-            self.compute_redraw()
+            self.featsel.remove(gene_ind)
+            self.redraw()
 
         pop_but = ipyw.Button(
             icon="minus-circle",
@@ -203,7 +194,7 @@ class InteractiveMarkerSelection:
             nonlocal gene_ind
             try:
                 gene_ind = self.adata.var_names.get_loc(textbox.value)
-                label.value = "(score: {:0.4f})".format(self.scores[gene_ind])
+                label.value = "(score: {:0.4f})".format(self.featsel.score[gene_ind])
                 but.disabled = False
             except KeyError:
                 gene_ind = -1
@@ -214,8 +205,8 @@ class InteractiveMarkerSelection:
 
         def add_other_gene(b):
             if gene_ind >= 0:
-                self.S.append(gene_ind)
-                self.compute_redraw()
+                self.featsel.add(gene_ind)
+                self.redraw()
 
         but.on_click(add_other_gene)
         return ipyw.HBox([but, textbox, label])
@@ -223,7 +214,7 @@ class InteractiveMarkerSelection:
     def show(self):
         """Display the jupyter widgets"""
         display(self.out)
-        self.compute_redraw()
+        self.redraw()
 
 
 def cife_obj(H, i, S):
