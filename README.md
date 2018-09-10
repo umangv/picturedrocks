@@ -7,7 +7,12 @@ PicturedRocks is a python package that implements some single cell analysis algo
 
 ## Usage
 
-To install, put the `picturedrocks` directory in your python path (e.g., in the current working directory).
+To install the latest GitHub version of PicturedRocks, do an "editable" installation of PicturedRocks:
+```
+git clone git@github.com:umangv/picturedrocks.git
+cd picturedrocks
+pip install -e .
+```
 
 PicturedRocks in compatible with `scanpy` and uses its `AnnData` objects. Most methods require cluster labels to be loaded. 
 
