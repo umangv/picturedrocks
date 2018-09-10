@@ -32,7 +32,7 @@ class MIMixin:
             - self.infoset.entropy_wrt(np.array([-1]))
         )
         self.penalty = np.zeros(len(self.base_score))
-        self.score = self.base_score[:]
+        self.score = self.base_score.copy()
 
 
 class EntropyMixin:
