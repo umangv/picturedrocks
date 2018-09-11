@@ -13,3 +13,4 @@ Sphinx
 sphinx-rtd-theme
 sphinxcontrib-napoleon
 nbsphinx
+ipython
