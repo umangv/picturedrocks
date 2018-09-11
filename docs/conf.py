@@ -45,6 +45,7 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
+    "nbsphinx",
 ]
 
 napoleon_google_docstring = False
