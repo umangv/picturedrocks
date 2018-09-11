@@ -20,6 +20,7 @@ from abc import ABC, abstractmethod
 
 
 class IterativeFeatureSelection(ABC):
+    """Abstract Class for Iterative Feature Selection"""
     @abstractmethod
     def __init__(self, infoset):
         self.infoset = infoset
@@ -28,13 +29,37 @@ class IterativeFeatureSelection(ABC):
 
     @abstractmethod
     def add(self, ind):
+        """Select specified feature
+
+        Args
+        ----
+        ind: int
+            Index of feature to select
+        """
         pass
 
     @abstractmethod
     def remove(self, ind):
+        """Remove specified feature
+
+        Args
+        ----
+        ind: int
+            Index of feature to remove
+        """
         pass
 
     def autoselect(self, n_feats):
+        """Auto select features
+
+        This automatically selects `n_feats` features greedily by selecting
+        the feature with the highest score at each iteration.
+
+        Args
+        ----
+        n_feats: int
+            The number of features to select
+        """
         for i in range(n_feats):
             best = np.argmax(self.score)
             self.add(best)

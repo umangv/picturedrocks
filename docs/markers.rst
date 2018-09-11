@@ -21,11 +21,33 @@ expression). Such data is stored in
 using :func:`picturedrocks.markers.makeinfoset` to generate such an object
 after appropriate normalization
 
-.. autoclass:: picturedrocks.markers.mutualinformation.iterative.MIM
-.. autoclass:: picturedrocks.markers.mutualinformation.iterative.CIFE
-.. autoclass:: picturedrocks.markers.mutualinformation.iterative.JMI
-.. autoclass:: picturedrocks.markers.mutualinformation.iterative.UniEntropy
-.. autoclass:: picturedrocks.markers.mutualinformation.iterative.CIFEUnsup
+Iterative Feature Selection
++++++++++++++++++++++++++++
+
+All information-theoretic feature selection methods in PicturedRocks are
+greedy algorithms. In general, they implement the abstract class
+:any:`IterativeFeatureSelection` class. See :ref:`sup_mi` and :ref:`unsup_mi`
+for specific algorithms.
+
+.. automodule:: picturedrocks.markers.mutualinformation.iterative
+
+.. autoclass:: IterativeFeatureSelection
+    :members:
+
+.. _sup_mi:
+
+Supervised Feature Selection
+****************************
+.. autoclass:: MIM
+.. autoclass:: CIFE
+.. autoclass:: JMI
+
+.. _unsup_mi:
+
+Unsupervised Feature Selection
+******************************
+.. autoclass:: UniEntropy
+.. autoclass:: CIFEUnsup
 
 Auxiliary Classes and Methods
 +++++++++++++++++++++++++++++

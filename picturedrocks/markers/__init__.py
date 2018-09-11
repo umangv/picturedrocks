@@ -17,5 +17,4 @@
 
 from . import mutualinformation
 from .mutualinformation.infoset import makeinfoset, InformationSet
-from ._mutualinfo import mutualinfo as mutualinfo_old
 from . import interactive
