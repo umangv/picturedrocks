@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from umap import UMAP
 import colorlover as cl
 from plotly.offline import iplot, init_notebook_mode
 import plotly.graph_objs as go
@@ -24,6 +25,7 @@ class InteractiveMarkerSelection:
         connected=True,
         show_cells=True,
         show_genes=True,
+        dim_red="tsne",
     ):
         """Run an interactive marker selection GUI inside a jupyter notebook
 
@@ -51,6 +53,8 @@ class InteractiveMarkerSelection:
         show_genes: bool
             Determines whether to display a tSNE plot of genes to visualize
             gene similarity
+        dim_red: {"tsne", "umap"}
+            Dimensionality reduction algorithm
 
         Warning
         -------
@@ -66,22 +70,32 @@ class InteractiveMarkerSelection:
 
         self.show_genes = show_genes
         self.show_cells = show_cells
+        self.dim_red = dim_red
 
         init_notebook_mode(connected=connected)
 
-        if show_genes and "gene_tsne" not in self.adata.varm_keys():
-            print("Running tSNE on genes...")
-            p = PCA(n_components=30)
-            t = TSNE()
-            self.adata.varm["gene_pca"] = p.fit_transform(self.adata.X.T)
-            self.adata.varm["gene_tsne"] = t.fit_transform(self.adata.varm["gene_pca"])
+        if show_genes or show_cells:
+            assert dim_red in [
+                "tsne",
+                "umap",
+            ], "Invalid dimensionality Reduction Algorithm"
+            dim_red_cls = {"tsne": TSNE, "umap": UMAP}[dim_red]
 
-        if show_cells and "X_tsne" not in self.adata.obsm_keys():
-            print("Running tSNE on cells...")
+        if show_genes and ("gene_" + dim_red) not in self.adata.varm_keys():
+            print(f"Running {dim_red} on genes...")
             p = PCA(n_components=30)
-            t = TSNE()
+            dr = dim_red_cls()
+            self.adata.varm["gene_pca"] = p.fit_transform(self.adata.X.T)
+            self.adata.varm["gene_" + dim_red] = dr.fit_transform(
+                self.adata.varm["gene_pca"]
+            )
+
+        if show_cells and ("X_" + dim_red) not in self.adata.obsm_keys():
+            print(f"Running {dim_red} on cells...")
+            p = PCA(n_components=30)
+            dr = dim_red_cls()
             self.adata.obsm["X_pca"] = p.fit_transform(self.adata.X)
-            self.adata.obsm["X_tsne"] = t.fit_transform(self.adata.obsm["X_pca"])
+            self.adata.obsm["X_" + dim_red] = dr.fit_transform(self.adata.obsm["X_pca"])
 
         self.disp_genes = disp_genes
         self.plot_genes = disp_genes * 3
@@ -97,9 +111,8 @@ class InteractiveMarkerSelection:
             )
 
     def show_loading(self):
-        self.out_next.children = [ipyw.Label("Loading..."),]
+        self.out_next.children = [ipyw.Label("Loading...")]
         self.out_cur.children = []
-
 
     def redraw(self):
         """Redraw jupyter widgets"""
@@ -135,7 +148,7 @@ class InteractiveMarkerSelection:
                 iplot(
                     pr.plot.plotgeneheat(
                         self.adata,
-                        self.adata.obsm["X_tsne"],
+                        self.adata.obsm["X_" + self.dim_red],
                         top_gene_inds[: self.disp_genes].tolist() + self.featsel.S,
                     )
                 )
@@ -144,8 +157,12 @@ class InteractiveMarkerSelection:
                     go.Figure(
                         data=[
                             go.Scatter(
-                                x=self.adata.varm["gene_tsne"][top_genes_plot, 0],
-                                y=self.adata.varm["gene_tsne"][top_genes_plot, 1],
+                                x=self.adata.varm["gene_" + self.dim_red][
+                                    top_genes_plot, 0
+                                ],
+                                y=self.adata.varm["gene_" + self.dim_red][
+                                    top_genes_plot, 1
+                                ],
                                 text=self.adata.var_names.values.astype(str)[
                                     top_genes_plot
                                 ],

@@ -24,12 +24,12 @@ setuptools.setup(
         "anndata",
         "colorlover",
         "h5py",
-        "loompy",
         "numpy",
         "pandas",
         "plotly",
         "scanpy",
         "scipy",
+        "umap-learn"
     ],
     python_requires="~=3.6",
 )
