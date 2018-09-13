@@ -22,8 +22,8 @@ from warnings import warn
 import numpy as np
 
 
-def read_clusts(adata, filename, sep=",", copy=False):
-    """Read cluster labels from a csv
+def read_clusts(adata, filename, sep=",", name="clust", header=True, copy=False):
+    """Read cluster labels from a csv into an obs column
 
     Args
     ----
@@ -33,6 +33,11 @@ def read_clusts(adata, filename, sep=",", copy=False):
         filename of the csv file with labels
     sep: str, optional
         csv delimiter 
+    name: str, optional
+        destination for label is adata.obs[name]
+    header: bool
+        deterimes whether csv has a header line. If false, it is assumed that
+        data begins at the first line of csv
     copy: bool
         determines whether a copy of `AnnData` object is returned
 
@@ -49,33 +54,27 @@ def read_clusts(adata, filename, sep=",", copy=False):
        cluster labels, ordered as in ``adata``)
     """
     adata = adata.copy() if copy else adata
-    clustdf = pd.read_csv(filename, sep=sep)
+    header = 0 if header else None
+    clustdf = pd.read_csv(filename, sep=sep, header=header)
     if clustdf.shape[1] == 2:
         clustdf = clustdf.set_index(clustdf.columns[0])
     assert clustdf.shape[1] == 1, "Cluster column ambigious"
     clusters = clustdf.iloc[:, 0]
     if clusters.dtype.kind == "i":
-        if clusters.min() > 0:
-            warn("Changing cluster ids to begin at 0.")
-            clusters -= clusters.min()
-        clustuniq = np.sort(clusters.unique())
-        assert np.array_equal(
-            clustuniq, np.arange(clustuniq.size)
-        ), "Cluster ids need to be 0, 1, ..., K-1"
-        adata.obs["y"] = clusters
-        adata.obs["clust"] = ("Cluster " + clusters.astype("str")).astype("category")
+        adata.obs[name] = ("Cluster " + clusters.astype("str")).astype("category")
     else:
-        adata.obs["clust"] = clusters.astype("category")
-        adata.obs["y"] = adata.obs["clust"].cat.codes
-    if adata.obs["y"].isnull().any() or adata.obs["clust"].isnull().any():
+        adata.obs[name] = clusters.astype("category")
+    if adata.obs[name].isnull().any():
         warn("Some or all cells not assigned to cluster.")
     return adata
 
 
-def process_clusts(adata, copy=False):
-    """Annotate with information about clusters
+def process_clusts(adata, name="clust", copy=False):
+    """Process cluster labels from an obs column
 
-    Precomputes cluster indices, number of clusters, etc.
+    This copies `adata.obs[name]` into `adata.obs["clust"]` and precomputes
+    cluster indices, number of clusters, etc for use by various functions in
+    PicturedRocks.
 
     Args
     ----
@@ -95,7 +94,10 @@ def process_clusts(adata, copy=False):
     immediately after :func:`sc.read_loom <scanpy.api.read_loom>`.
     """
     adata = adata.copy() if copy else adata
-    adata.obs["clust"] = adata.obs["clust"].astype("category")
+    adata.obs["clust"] = adata.obs[name].astype("category")
+    adata.obs["y"] = adata.obs["clust"].cat.codes
+    if adata.obs["y"].isnull().any() or adata.obs["clust"].isnull().any():
+        warn("Some or all cells not assigned to cluster.")
     adata.uns["num_clusts"] = adata.obs["clust"].cat.categories.size
     clusterindices = {}
     for k in range(adata.uns["num_clusts"]):
