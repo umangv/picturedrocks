@@ -96,6 +96,11 @@ class InteractiveMarkerSelection:
                 ipyw.VBox([ipyw.HBox([self.out_next, self.out_cur]), self.out_plot])
             )
 
+    def show_loading(self):
+        self.out_next.children = [ipyw.Label("Loading..."),]
+        self.out_cur.children = []
+
+
     def redraw(self):
         """Redraw jupyter widgets"""
         self.out_next.children = []
@@ -173,6 +178,7 @@ class InteractiveMarkerSelection:
         )
 
         def add_cur_gene(b):
+            self.show_loading()
             self.featsel.add(gene_ind)
             self.redraw()
 
@@ -189,6 +195,7 @@ class InteractiveMarkerSelection:
 
     def _cur_gene_row(self, gene_ind):
         def del_cur_gene(b):
+            self.show_loading()
             self.featsel.remove(gene_ind)
             self.redraw()
 
@@ -228,6 +235,7 @@ class InteractiveMarkerSelection:
 
         def add_other_gene(b):
             if gene_ind >= 0:
+                self.show_loading()
                 self.featsel.add(gene_ind)
                 self.redraw()
 
