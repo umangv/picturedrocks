@@ -272,6 +272,7 @@ def _sparse_entropy_wrt(
     return hs
 
 
+@nb.njit
 def _sparse_entropy(indices, data, n_rows, max_val):
     counts = np.zeros(max_val + 1, dtype=np.int64)
     counts[0] = n_rows
