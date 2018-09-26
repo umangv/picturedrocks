@@ -16,5 +16,6 @@
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
 from . import mutualinformation
-from .mutualinformation.infoset import makeinfoset, InformationSet
+from .mutualinformation.infoset import makeinfoset, InformationSet, SparseInformationSet
+from .mutualinformation.iterative import CIFE, CIFEUnsup, JMI, MIM, UniEntropy
 from . import interactive

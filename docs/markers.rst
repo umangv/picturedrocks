@@ -52,6 +52,7 @@ Unsupervised Feature Selection
 Auxiliary Classes and Methods
 +++++++++++++++++++++++++++++
 .. autoclass:: picturedrocks.markers.InformationSet
+.. autoclass:: picturedrocks.markers.SparseInformationSet
 .. autofunction:: picturedrocks.markers.makeinfoset
 
 Interactive Marker Selection
