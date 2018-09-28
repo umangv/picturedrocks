@@ -160,7 +160,11 @@ class SparseInformationSet:
 
     def __init__(self, X, has_y=False):
         self.has_y = has_y
+        # our algorithm uses csc matrices under the assumption and zeros are
+        # eliminated and entries have been sorted. Ensure this is the case.
         self.X = scipy.sparse.csc_matrix(X)
+        self.X.eliminate_zeros()
+        self.X.sort_indices()
         self.N = self.X.shape[0]
         self.P = self.X.shape[1]
         self._shift = int(np.log2(self.X.max()) + 1)
@@ -218,6 +222,15 @@ class SparseInformationSet:
             len(cols),
             self._shift,
         )
+
+    def todense(self):
+        """Return a InformationSet with the same data stored as a dense array"""
+        return InformationSet(self.X.toarray(), self.has_y)
+
+    @staticmethod
+    def fromdense(denseinfoset):
+        """Create SparseInformationSet with the same data stored as a sparse matrix"""
+        return SparseInformationSet(denseinfoset.X, denseinfoset.has_y)
 
 
 @nb.njit
