@@ -37,7 +37,7 @@ def pca(data, dim=3, center=True, copy=False):
     Returns
     -------
     anndata.AnnData
-        object with ``obsm["X_pca"]``, ``varm["PCs"]``, and ``uns["num_pcs"]`` set
+        object with ``obsm["X_pca"]``, and ``varm["PCs"]`` set
     """
 
     if isinstance(data, AnnData):
@@ -45,7 +45,6 @@ def pca(data, dim=3, center=True, copy=False):
         Xcent, pcs, Xpca = pca(adata.X, dim=dim, center=center)
         adata.obsm["X_pca"] = Xpca
         adata.varm["PCs"] = pcs
-        adata.uns["num_pcs"] = dim
         return adata
     Xcent = data.copy()
     if center:
