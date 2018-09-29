@@ -75,7 +75,7 @@ def genericplot(celldata, coords, **scatterkwargs):
             coords[inds],
             mode="markers",
             marker=dict(
-                size=4,
+                size=2,
                 color=colscal[k % len(colscal)],  # set color to an array/list
                 #                                  of desired values
                 opacity=1,
@@ -154,7 +154,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
         _scatter(
             coords[inds],
             mode="markers",
-            marker=dict(size=4, color=colscal[k % len(colscal)], opacity=1),
+            marker=dict(size=2, color=colscal[k % len(colscal)], opacity=1),
             name="Cluster {}".format(k),
             hoverinfo="name+text",
             text=["Predict {}".format(str(a)) for a in yhat[inds]],
@@ -164,7 +164,7 @@ def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
         _scatter(
             coords[inds],
             mode="markers",
-            marker=dict(size=4, color=colscal[k % len(colscal)], opacity=0.2),
+            marker=dict(size=2, color=colscal[k % len(colscal)], opacity=0.2),
             name="Cluster {}".format(k),
             hoverinfo="name",
             showlegend=False,
@@ -245,7 +245,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
                 coords[inds],
                 mode="markers",
                 marker=dict(
-                    size=4,
+                    size=2,
                     color=clustscal[k % len(clustscal)],  # set color to an array/list
                     #                                  of desired values
                 ),
@@ -258,7 +258,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
         first_label = "Cells"
         numclusts = 1
         plotbyclust = [
-            _scatter(coords, mode="markers", marker=dict(size=4), name="cells")
+            _scatter(coords, mode="markers", marker=dict(size=2), name="cells")
         ]
 
     genes = [
@@ -277,7 +277,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
         _scatter(
             coords,
             mode="markers",
-            marker=dict(size=4, color=genescal[exprnorm[:, i]]),
+            marker=dict(size=2, color=genescal[exprnorm[:, i]]),
             name=genenames[i],
             text=geneexpr[:, i].astype(str),
             hoverinfo="name+text",
