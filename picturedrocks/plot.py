@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
-from anndata import AnnData
-import numpy as np
-import colorlover as cl
-import plotly.graph_objs as go
 import collections
+
+import colorlover as cl
+import numpy as np
+import plotly.graph_objs as go
+import scipy.sparse
+from anndata import AnnData
+from umap import UMAP
 from scanpy.preprocessing.simple import pca
 
 
@@ -109,6 +112,15 @@ def pcafigure(celldata, **scatterkwargs):
         print("Need 3 PCs. Calculating now.")
         pca(celldata, 3)
     return genericplot(celldata, celldata.obsm["X_pca"][:, :3], **scatterkwargs)
+
+
+def umapfigure(adata, **scatterkwargs):
+    if "X_umap" not in adata.obsm_keys():
+        if "X_pca" not in adata.obsm_keys() or adata.obsm["X_pca"].shape[1] < 30:
+            pca(adata, 30, zero_center=not scipy.sparse.issparse(adata.X))
+        umap = UMAP()
+        adata.obsm["X_umap"] = umap.fit_transform(adata.obsm["X_pca"][:, :30])
+    return genericplot(adata, adata.obsm["X_umap"], **scatterkwargs)
 
 
 def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
