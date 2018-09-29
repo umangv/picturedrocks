@@ -20,7 +20,7 @@ import numpy as np
 import colorlover as cl
 import plotly.graph_objs as go
 import collections
-from .preprocessing import pca
+from scanpy.preprocessing.simple import pca
 
 
 def _deep_merge_dict(source, destination):
@@ -105,10 +105,10 @@ def pcafigure(celldata, **scatterkwargs):
         keyword arguments to pass to ``Scatter`` or ``Scatter3D`` in `plotly`
         (dictionaries are merged recursively)
     """
-    if "X_pca" not in celldata.obsm_keys() or celldata.uns["num_pcs"] < 3:
+    if "X_pca" not in celldata.obsm_keys() or celldata.obsm["X_pca"].shape[1] < 3:
         print("Need 3 PCs. Calculating now.")
         pca(celldata, 3)
-    return genericplot(celldata, celldata.obsm["X_pca"][:, -3:], **scatterkwargs)
+    return genericplot(celldata, celldata.obsm["X_pca"][:, :3], **scatterkwargs)
 
 
 def genericwrongplot(celldata, coords, yhat, labels=None, **scatterkwargs):
@@ -199,12 +199,12 @@ def pcawrongplot(celldata, yhat, **scatterkwargs):
         (dictionaries are merged recursively)
     """
 
-    if "X_pca" not in celldata.obsm_keys() or celldata.uns["num_pcs"] < 3:
+    if "X_pca" not in celldata.obsm_keys() or celldata.obsm["X_pca"].shape[1] < 3:
         print("Need 3 PCs. Calculating now.")
         pca(celldata, 3)
     return genericwrongplot(
         celldata,
-        celldata.obsm["X_pca"][:, -3:],
+        celldata.obsm["X_pca"][:, :3],
         yhat,
         labels=["PC1", "PC2", "PC3"],
         **scatterkwargs
