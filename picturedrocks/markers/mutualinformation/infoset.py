@@ -206,6 +206,7 @@ class SparseInformationSet:
             a 1-d array of entropies (where entry `i` corresponds to the
             entropy of columns `cols` together with column `i`)
         """
+        n_feats = self.P - 1 if self.has_y else self.P
         mcol = _sparse_make_master_col(self.X, cols, self._shift)
         if not np.issubdtype(mcol.dtype, np.integer):
             import pdb
@@ -218,7 +219,7 @@ class SparseInformationSet:
             mcol.indices,
             mcol.data,
             self.N,
-            self.P,
+            n_feats,
             len(cols),
             self._shift,
         )
