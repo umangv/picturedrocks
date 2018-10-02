@@ -165,6 +165,7 @@ class PerformanceReport:
         notebook and that `init_notebook_mode` has already been run.
         """
         from plotly.offline import iplot
+
         self.printscore()
         iplot(self.confusionmatrixfigure())
 
@@ -329,6 +330,13 @@ class FoldTester:
             self.adata.obs["y"], d["y"].ravel()
         ), "y vector does not match."
         assert self.validatefolds(), "folds are not partition of indices"
+
+
+def truncatemarkers(ft, n_markers):
+    ftnew = FoldTester(ft.adata)
+    ftnew.folds = ft.folds
+    ftnew.markers = [m[:n_markers] for m in ft.markers]
+    return ftnew
 
 
 class NearestCentroidClassifier:
