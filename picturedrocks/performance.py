@@ -19,6 +19,7 @@ import numpy as np
 import plotly.graph_objs as go
 import scanpy.api as sc
 import scipy.spatial.distance
+from scipy.sparse import issparse
 from anndata import AnnData
 
 from .read import process_clusts
@@ -346,7 +347,7 @@ class NearestCentroidClassifier:
         adata = sc.pp.log1p(adata, copy=True)
         self.xkibar = np.array(
             [
-                adata.X[adata.uns["clusterindices"][k]].mean(axis=0)
+                np.array(adata.X[adata.uns["clusterindices"][k]].mean(axis=0)).ravel()
                 for k in range(adata.uns["num_clusts"])
             ]
         )
@@ -355,5 +356,7 @@ class NearestCentroidClassifier:
         testdata = AnnData(Xtest)
         testdata = sc.pp.normalize_per_cell(testdata, 1000, copy=True)
         testdata = sc.pp.log1p(testdata, copy=True)
+        if issparse(testdata.X):
+            testdata.X = testdata.X.toarray()
         dxixk = scipy.spatial.distance.cdist(testdata.X, self.xkibar)
         return dxixk.argmin(axis=1)
