@@ -339,6 +339,15 @@ def truncatemarkers(ft, n_markers):
     return ftnew
 
 
+def merge_markers(ft, n_markers):
+    ftnew = FoldTester(ft.adata)
+    ftnew.folds = ft.folds
+    ftnew.markers = [
+        list(set(np.array(markers)[:, :n_markers].flatten())) for markers in ft.markers
+    ]
+    return ftnew
+
+
 class NearestCentroidClassifier:
     """Nearest Centroid Classifier for Cross Validation
 
