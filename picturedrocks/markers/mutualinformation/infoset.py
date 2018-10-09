@@ -45,9 +45,11 @@ def makeinfoset(adata, include_y):
         X = X.copy()
         X.data = np.log2(X.data + 1).round().astype(int)
         if include_y:
-            y = adata.obs["y"]
-            X = scipy.sparse.hstack([X, y[:, None]])
-        return SparseInformationSet(X, include_y)
+            y = adata.obs["y"].values
+            #X = scipy.sparse.hstack([X, y[:, None]])
+            return SparseInformationSet(X, y)
+        else:
+            return SparseInformationSet(X, None)
     else:
         X = np.log2(X + 1).round().astype(int)
         if include_y:
@@ -158,16 +160,25 @@ class SparseInformationSet:
         last column
     """
 
-    def __init__(self, X, has_y=False):
-        self.has_y = has_y
+    def __init__(self, X, y=None):
+        self.y = y
         # our algorithm uses csc matrices under the assumption and zeros are
         # eliminated and entries have been sorted. Ensure this is the case.
+        if y is not None:
+            if scipy.sparse.issparse(self.y):
+                self.y = self.y.toarray().flatten()
+            assert np.issubdtype(self.y.dtype, np.integer), "y should be integer dtype"
+            self.classsizes = np.zeros(self.y.max() + 1)
+            for i in self.y:
+                self.classsizes[i] += 1
         self.X = scipy.sparse.csc_matrix(X)
+        assert np.issubdtype(self.X.dtype, np.integer), "X should be integer dtype"
         self.X.eliminate_zeros()
         self.X.sort_indices()
         self.N = self.X.shape[0]
         self.P = self.X.shape[1]
         self._shift = int(np.log2(self.X.max()) + 1)
+        self._ybits = int(np.log2(self.y.max()) + 1)
 
     def entropy(self, cols):
         """Entropy of an ensemble of columns
@@ -183,6 +194,7 @@ class SparseInformationSet:
         numpy.int64
             the Shannon entropy of `cols`
         """
+        raise NotImplementedError("Single column entropy not supported")
         mcol = _sparse_make_master_col(self.X, cols, self._shift)
         return _sparse_entropy(
             mcol.indices, mcol.data, self.N, 2 ** (self._shift * (len(cols) + 1))
@@ -206,9 +218,18 @@ class SparseInformationSet:
             a 1-d array of entropies (where entry `i` corresponds to the
             entropy of columns `cols` together with column `i`)
         """
-        n_feats = self.P - 1 if self.has_y else self.P
+        has_y = len(cols) > 0 and cols[0] == -1
+        if has_y:
+            cols = cols[1:]
+            y = self.y
+            ybits = self._ybits
+            classsizes = self.classsizes
+        else:
+            y = np.arange(0)
+            ybits = 0
+            classsizes = np.arange(0)
+
         mcol = _sparse_make_master_col(self.X, cols, self._shift)
-        assert np.issubdtype(mcol.dtype, np.integer), "Need integer dtype"
         return _sparse_entropy_wrt(
             self.X.indices,
             self.X.indptr,
@@ -216,9 +237,12 @@ class SparseInformationSet:
             mcol.indices,
             mcol.data,
             self.N,
-            n_feats,
+            self.P,
             len(cols),
             self._shift,
+            ybits,
+            y,
+            classsizes
         )
 
     def todense(self):
@@ -233,15 +257,52 @@ class SparseInformationSet:
 
 @nb.njit
 def _sparse_entropy_wrt(
-    dindices, dindptr, ddata, mindices, mdata, n_rows, n_feats, n_mcols, shift
+    dindices, dindptr, ddata, mindices, mdata, n_rows, n_feats, n_mcols, shift,
+    ybits, y, classsizes
 ):
+    """Compute entropy on sparse data structure with respect to a master column
+
+    Args
+    ----
+    dindices: numpy.ndarray
+        data csc_matrix's indices attribute
+    dindptr: numpy.ndarray
+        data csc_matrix's indptr attribute
+    ddata: numpy.ndarray
+        data csc_matrix's data attribute
+    mindices: numpy.ndarray
+        master column csc_matrix's indices attribute
+    mdata: numpy.ndarray
+        master column csc_matrix's data attribute
+    n_rows: int
+        number of rows in the data matrix
+    n_feats: int
+        number of features to compute entropy against
+    n_mcols: int
+        number of columns used to make the master column
+    shift: int
+        number of bits to shift to the left per column
+    ybits: int
+        number of bits to fit y column, leave 0 if no y column
+    y: numpy.ndarray
+        array of class labels (pass np.arange(0) if no y column
+    classsizes: numpy.ndarray
+        array of class sizes (number of observations in each class)
+    """
     mdata = mdata << shift
 
     def entropy_wrt_i(cindices, cdata, i):
-        counts = np.zeros(2 ** (shift * (n_mcols + 1)), dtype=np.int64)
-        counts[0] = n_rows
+        counts = np.zeros(2 ** (shift * (n_mcols + 1) + ybits), dtype=np.int64)
+        if ybits:
+            yshift = shift * (n_mcols + 1)
+            for c, csize in enumerate(classsizes):
+                counts[c << yshift] = csize
+        else:
+            counts[0] = n_rows
+        value_modifier = 0
         cur_cind = 0
         cur_mind = 0
+        cur_rowind = 0
         # while at least one of current/master column has remaining entries to visit
         while cur_cind < cindices.size or cur_mind < mindices.size:
             # either we've run out of entries in the master column, or the
@@ -251,18 +312,25 @@ def _sparse_entropy_wrt(
             ):
                 curval = cdata[cur_cind]
                 cur_cind += 1
+                cur_rowind = cindices[cur_cind]
             # either we've run out of entries in the current column, or the
             # master column's next entry is smaller
             elif cur_cind >= cindices.size or cindices[cur_cind] > mindices[cur_mind]:
                 curval = mdata[cur_mind]
                 cur_mind += 1
+                cur_rowind = mindices[cur_mind]
             # neither column is exhausted and row indices are equal for both columns
             else:
                 curval = cdata[cur_cind] + mdata[cur_mind]
                 cur_cind += 1
                 cur_mind += 1
-            counts[0] -= 1
-            counts[curval] += 1
+                cur_rowind = cindices[cur_cind]
+            if ybits:
+                yval = y[cur_rowind] << yshift
+            else:
+                yval = 0
+            counts[yval + 0] -= 1
+            counts[yval + curval] += 1
         h = 0
         counts = counts / n_rows
         for e in counts:
