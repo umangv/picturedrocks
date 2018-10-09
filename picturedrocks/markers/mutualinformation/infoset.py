@@ -101,15 +101,15 @@ class InformationSet:
             the Shannon entropy of `cols`
         """
         n_cols = len(cols)
-        delta_prob = 1 / self.N
         mat = self.X[:, cols]
-        counts = np.zeros((2 ** self._shift) ** n_cols)
+        counts = np.zeros((2 ** self._shift) ** n_cols, dtype=np.int64)
         for i in range(self.N):
             ind = 0
             for j in range(n_cols):
                 ind = ind << self._shift
                 ind = ind | mat[i, j]
-            counts[ind] += delta_prob
+            counts[ind] += 1
+        counts = counts / self.N
         h = 0
         for e in counts:
             if e > 0:
@@ -311,20 +311,20 @@ def _sparse_entropy_wrt(
                 cur_cind < cindices.size and cindices[cur_cind] < mindices[cur_mind]
             ):
                 curval = cdata[cur_cind]
-                cur_cind += 1
                 cur_rowind = cindices[cur_cind]
+                cur_cind += 1
             # either we've run out of entries in the current column, or the
             # master column's next entry is smaller
             elif cur_cind >= cindices.size or cindices[cur_cind] > mindices[cur_mind]:
                 curval = mdata[cur_mind]
-                cur_mind += 1
                 cur_rowind = mindices[cur_mind]
+                cur_mind += 1
             # neither column is exhausted and row indices are equal for both columns
             else:
                 curval = cdata[cur_cind] + mdata[cur_mind]
+                cur_rowind = cindices[cur_cind]
                 cur_cind += 1
                 cur_mind += 1
-                cur_rowind = cindices[cur_cind]
             if ybits:
                 yval = y[cur_rowind] << yshift
             else:
@@ -373,8 +373,11 @@ def _sparse_entropy(indices, data, n_rows, max_val):
 # tested it. Leaving the cleaner but slower code here.
 def _sparse_make_master_col(X, cols, shift):
     if len(cols) > 0:
-        return X[:, cols] @ scipy.sparse.csr_matrix(
-            2 ** (shift * np.arange(len(cols)))[:, None]
+        ret = X[:, cols] @ scipy.sparse.csr_matrix(
+                2 ** (shift * np.arange(len(cols))[::-1])[:, None]
         )
+        ret.eliminate_zeros()
+        ret.sort_indices()
+        return ret
     else:
         return scipy.sparse.csc_matrix((X.shape[0], 1), dtype=int)
