@@ -359,21 +359,27 @@ class NearestCentroidClassifier:
         self.xkibar = None
 
     def train(self, adata):
+        adata = adata.copy()
+        adata.X = _toarray(adata.X)
+        sc.pp.normalize_per_cell(adata, 1000)
+        sc.pp.log1p(adata)
         adata = process_clusts(adata)
-        adata = sc.pp.normalize_per_cell(adata, 1000, copy=True)
-        adata = sc.pp.log1p(adata, copy=True)
         self.xkibar = np.array(
             [
-                np.array(adata.X[adata.uns["clusterindices"][k]].mean(axis=0)).ravel()
+                adata.X[adata.uns["clusterindices"][k]].mean(axis=0).tolist()
                 for k in range(adata.uns["num_clusts"])
             ]
         )
 
     def test(self, Xtest):
         testdata = AnnData(Xtest)
-        testdata = sc.pp.normalize_per_cell(testdata, 1000, copy=True)
-        testdata = sc.pp.log1p(testdata, copy=True)
-        if issparse(testdata.X):
-            testdata.X = testdata.X.toarray()
+        sc.pp.normalize_per_cell(testdata, 1000)
+        sc.pp.log1p(testdata)
+        testdata.X = _toarray(testdata.X)
         dxixk = scipy.spatial.distance.cdist(testdata.X, self.xkibar)
         return dxixk.argmin(axis=1)
+
+def _toarray(arr_like):
+    if issparse(arr_like):
+        return arr_like.toarray()
+    return arr_like
