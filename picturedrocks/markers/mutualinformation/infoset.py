@@ -208,10 +208,7 @@ class SparseInformationSet:
         """
         n_feats = self.P - 1 if self.has_y else self.P
         mcol = _sparse_make_master_col(self.X, cols, self._shift)
-        if not np.issubdtype(mcol.dtype, np.integer):
-            import pdb
-
-            pdb.set_trace()
+        assert np.issubdtype(mcol.dtype, np.integer), "Need integer dtype"
         return _sparse_entropy_wrt(
             self.X.indices,
             self.X.indptr,
