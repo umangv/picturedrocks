@@ -171,6 +171,7 @@ class SparseInformationSet:
             self.classsizes = np.zeros(self.y.max() + 1)
             for i in self.y:
                 self.classsizes[i] += 1
+            self._ybits = int(np.log2(self.y.max()) + 1)
         self.X = scipy.sparse.csc_matrix(X)
         assert np.issubdtype(self.X.dtype, np.integer), "X should be integer dtype"
         self.X.eliminate_zeros()
@@ -178,7 +179,6 @@ class SparseInformationSet:
         self.N = self.X.shape[0]
         self.P = self.X.shape[1]
         self._shift = int(np.log2(self.X.max()) + 1)
-        self._ybits = int(np.log2(self.y.max()) + 1)
 
     def entropy(self, cols):
         """Entropy of an ensemble of columns
