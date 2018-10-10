@@ -46,7 +46,6 @@ def makeinfoset(adata, include_y):
         X.data = np.log2(X.data + 1).round().astype(int)
         if include_y:
             y = adata.obs["y"].values
-            #X = scipy.sparse.hstack([X, y[:, None]])
             return SparseInformationSet(X, y)
         else:
             return SparseInformationSet(X, None)
@@ -254,7 +253,7 @@ class SparseInformationSet:
             self._shift,
             ybits,
             y,
-            classsizes
+            classsizes,
         )
 
     def todense(self):
@@ -269,8 +268,18 @@ class SparseInformationSet:
 
 @nb.njit
 def _sparse_entropy_wrt(
-    dindices, dindptr, ddata, mindices, mdata, n_rows, n_feats, n_mcols, shift,
-    ybits, y, classsizes
+    dindices,
+    dindptr,
+    ddata,
+    mindices,
+    mdata,
+    n_rows,
+    n_feats,
+    n_mcols,
+    shift,
+    ybits,
+    y,
+    classsizes,
 ):
     """Compute entropy on sparse data structure with respect to a master column
 
@@ -386,7 +395,7 @@ def _sparse_entropy(indices, data, n_rows, max_val):
 def _sparse_make_master_col(X, cols, shift):
     if len(cols) > 0:
         ret = X[:, cols] @ scipy.sparse.csr_matrix(
-                2 ** (shift * np.arange(len(cols))[::-1])[:, None]
+            2 ** (shift * np.arange(len(cols))[::-1])[:, None]
         )
         ret.eliminate_zeros()
         ret.sort_indices()
