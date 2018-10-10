@@ -161,10 +161,11 @@ class SparseInformationSet:
     """
 
     def __init__(self, X, y=None):
+        self.has_y = y is not None
         self.y = y
         # our algorithm uses csc matrices under the assumption and zeros are
         # eliminated and entries have been sorted. Ensure this is the case.
-        if y is not None:
+        if self.has_y:
             if scipy.sparse.issparse(self.y):
                 self.y = self.y.toarray().flatten()
             assert np.issubdtype(self.y.dtype, np.integer), "y should be integer dtype"
