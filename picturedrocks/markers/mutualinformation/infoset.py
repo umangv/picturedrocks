@@ -195,11 +195,22 @@ class SparseInformationSet:
         numpy.int64
             the Shannon entropy of `cols`
         """
-        raise NotImplementedError("Single column entropy not supported")
-        mcol = _sparse_make_master_col(self.X, cols, self._shift)
-        return _sparse_entropy(
-            mcol.indices, mcol.data, self.N, 2 ** (self._shift * (len(cols) + 1))
-        )
+        if len(cols) > 0 and cols[0] == -1:
+            mcol = _sparse_make_master_col(self.X, cols[1:], self._shift).toarray()
+            mcol += self.y[:, None] << (self._shift * len(cols))
+            mcol = scipy.sparse.csc_matrix(mcol)
+            # TODO: compute entropy using the dense matrix in this case!
+            return _sparse_entropy(
+                mcol.indices,
+                mcol.data,
+                self.N,
+                2 ** (self._shift * len(cols) + self._ybits),
+            )
+        else:
+            mcol = _sparse_make_master_col(self.X, cols, self._shift)
+            return _sparse_entropy(
+                mcol.indices, mcol.data, self.N, 2 ** (self._shift * len(cols))
+            )
 
     def entropy_wrt(self, cols):
         """Compute multiple entropies at once
