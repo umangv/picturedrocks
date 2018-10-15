@@ -257,13 +257,18 @@ class FoldTester:
         select_function: function
             a function that takes in an :class:`AnnData <anndata.AnnData>`
             object and outputs a list of gene markers, given by their index 
+
+        Note
+        ----
+        The `select_function` should not attempt to modify data in-place.  Any
+        preprocessing should be done on a copy. 
         """
         k = len(self.folds)
         self.markers = []
         for f in self.folds:
             mask = np.zeros(self.adata.n_obs, dtype=bool)
             mask[f] = True
-            traindata = self.adata[~mask, :].copy()
+            traindata = self.adata[~mask, :]
             self.markers.append(select_function(traindata))
 
     def classify(self, classifier):
@@ -279,15 +284,20 @@ class FoldTester:
             a classifier that trains with a training data set and predicts
             labels of test data. See `NearestCentroidClassifier` for an
             example.
+
+        Note
+        ----
+        The `classifier` should not attempt to modify data in-place.  Any
+        preprocessing should be done on a copy. 
         """
         self.yhat = np.zeros(self.adata.n_obs, dtype=int) - 1
         for i, f in enumerate(self.folds):
             mask = np.zeros(self.adata.n_obs, dtype=bool)
             mask[f] = True
-            traindata = self.adata[~mask, :][:, self.markers[i]].copy()
+            traindata = self.adata[~mask, :][:, self.markers[i]]
             c = classifier()
             c.train(traindata)
-            self.yhat[f] = c.test(self.adata.X[f, :][:, self.markers[i]].copy())
+            self.yhat[f] = c.test(self.adata.X[f, :][:, self.markers[i]])
 
     def savefoldsandmarkers(self, file):
         """Save folds and markers for each fold
