@@ -371,7 +371,7 @@ class NearestCentroidClassifier:
     def train(self, adata):
         adata = adata.copy()
         adata.X = _toarray(adata.X)
-        sc.pp.normalize_per_cell(adata, 1000)
+        sc.pp.normalize_per_cell(adata, 1000, min_counts=0)
         sc.pp.log1p(adata)
         adata = process_clusts(adata)
         self.xkibar = np.array(
@@ -383,7 +383,7 @@ class NearestCentroidClassifier:
 
     def test(self, Xtest):
         testdata = AnnData(Xtest)
-        sc.pp.normalize_per_cell(testdata, 1000)
+        sc.pp.normalize_per_cell(testdata, 1000, min_counts=0)
         sc.pp.log1p(testdata)
         testdata.X = _toarray(testdata.X)
         dxixk = scipy.spatial.distance.cdist(testdata.X, self.xkibar)
