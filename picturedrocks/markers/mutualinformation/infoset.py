@@ -160,10 +160,22 @@ class SparseInformationSet:
     """
 
     def __init__(self, X, y=None):
-        self.has_y = y is not None
-        self.y = y
+        self.set_y(y)
         # our algorithm uses csc matrices under the assumption and zeros are
         # eliminated and entries have been sorted. Ensure this is the case.
+        self.X = scipy.sparse.csc_matrix(X)
+        assert np.issubdtype(self.X.dtype, np.integer), "X should be integer dtype"
+        # ensure the sparse matrix is in canonical format
+        self.X.sum_duplicates()
+        self.X.eliminate_zeros()
+        assert self.X.has_canonical_format, "Sparse matrix not in canonical format"
+        self.N = self.X.shape[0]
+        self.P = self.X.shape[1]
+        self._shift = int(np.log2(self.X.max()) + 1)
+
+    def set_y(self, y):
+        self.has_y = y is not None
+        self.y = y
         if self.has_y:
             if scipy.sparse.issparse(self.y):
                 self.y = self.y.toarray().flatten()
@@ -172,13 +184,6 @@ class SparseInformationSet:
             for i in self.y:
                 self.classsizes[i] += 1
             self._ybits = int(np.log2(self.y.max()) + 1)
-        self.X = scipy.sparse.csc_matrix(X)
-        assert np.issubdtype(self.X.dtype, np.integer), "X should be integer dtype"
-        self.X.eliminate_zeros()
-        self.X.sort_indices()
-        self.N = self.X.shape[0]
-        self.P = self.X.shape[1]
-        self._shift = int(np.log2(self.X.max()) + 1)
 
     def entropy(self, cols):
         """Entropy of an ensemble of columns
