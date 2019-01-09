@@ -5,9 +5,6 @@ PicturedRocks current implements two categories of marker selection algorithms:
  * mutual information-based algorithms 
  * 1-bit compressed sensing based algorithms
 
-.. toctree::
-   FeatureSelectionTutorial.ipynb
-
 Mutual information
 ==================
 

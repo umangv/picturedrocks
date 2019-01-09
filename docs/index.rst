@@ -27,6 +27,7 @@ To install the latest code from github, clone our github repository. Once inside
    :hidden:
    :caption: Contents:
 
+   FeatureSelectionTutorial.ipynb
    read
    preprocessing
    plot
