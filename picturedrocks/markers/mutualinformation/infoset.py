@@ -22,8 +22,8 @@ import numpy as np
 import scipy.sparse
 
 
-def makeinfoset(adata, include_y):
-    """Discretize data
+def makeinfoset(adata, include_y, k=5):
+    """Discretize data and make a Sparse InformationSet object
 
     Args
     ----
@@ -36,25 +36,51 @@ def makeinfoset(adata, include_y):
     
     Returns
     -------
-    Union[InformationSet, SparseInformationSet]
+    SparseInformationSet
         An object that can be used to perform information theoretic
         calculations.
     """
-    X = adata.X
-    if scipy.sparse.issparse(X):
-        X = X.copy()
-        X.data = np.log2(X.data + 1).round().astype(int)
-        if include_y:
-            y = adata.obs["y"].values
-            return SparseInformationSet(X, y)
-        else:
-            return SparseInformationSet(X, None)
-    else:
-        X = np.log2(X + 1).round().astype(int)
-        if include_y:
-            y = adata.obs["y"]
-            X = np.concatenate([X, y[:, None]], axis=1)
-        return InformationSet(X, include_y)
+    X = quantile_discretize(adata.X, k)
+    infoset = SparseInformationSet(X, None)
+    if include_y:
+        infoset.set_y(adata.obs["y"].values)
+    return infoset
+
+
+def quantile_discretize(X, k=5):
+    """Discretize data matrix with a recursive quantile transform
+
+    Args
+    ----
+    X: Union[numpy.ndarray, scipy.sparse.spmatrix]
+        The input data matrix to transform.
+    k: int
+        The number of bins to use in the discretization.
+    Returns
+    -------
+    np.ndarray
+        The discretized data matrix
+    """
+    X_is_sparse = scipy.sparse.issparse(X)
+    n_obs, n_features = X.shape
+    if X_is_sparse:
+        X = X.toarray()
+    newX = np.zeros(X.shape, dtype=int)
+    for j in range(n_features):
+        col = X[:, j]
+        origcol = col
+        bins = []
+        cmax = col.max()
+        for i in range(k - 1):
+            if bins:
+                m = bins[-1]
+                col = col[col > m]
+                if cmax <= m or len(col) == 0:
+                    break
+            bins.append(np.percentile(col, 100 / (k - i)))
+        newcol = np.digitize(origcol, bins, right=True)
+        newX[:, j] = newcol
+    return newX
 
 
 @nb.jitclass(
