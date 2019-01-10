@@ -3,6 +3,9 @@ docs/_build
 *.swp
 *.swo
 .vscode
+.coverage
 build/
 dist/
+data/
+htmlcov/
 picturedrocks.egg-info/
