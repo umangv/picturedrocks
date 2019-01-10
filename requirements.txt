@@ -7,4 +7,4 @@ plotly
 scanpy
 scikit-learn
 scipy
-umap
+umap-learn
