@@ -1,5 +1,8 @@
 # PicturedRocks Single Cell Analysis Tool
 
+[![Build Status](https://travis-ci.org/umangv/picturedrocks.svg?branch=master)](https://travis-ci.org/umangv/picturedrocks)
+[![Documentation Status](https://readthedocs.org/projects/picturedrocks/badge/?version=latest)](https://picturedrocks.readthedocs.io/en/latest/?badge=latest)
+
 PicturedRocks is a python package that implements some single cell analysis algorithms that we are studying. Currently, we implement two marker selection algorithms:
 
 1. 1-bit Compressed Sensing algorithms based on [Conrad, et al. BMC bioinformatics '17]
