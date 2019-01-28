@@ -2,14 +2,11 @@ import numpy as np
 import pandas as pd
 import picturedrocks as pr
 import pytest
-from pathlib import Path
 
 
 @pytest.fixture()
-def diminish_red_df():
-    df = pd.read_csv(
-        (Path(__file__) / ".." / "data/diminish-red.csv").resolve(), index_col=0
-    )
+def diminish_red_df(datadir):
+    df = pd.read_csv(datadir / "diminish-red.csv", index_col=0)
     return df
 
 
@@ -24,8 +21,8 @@ def diminish_red_inf(diminish_red_df):
 
 
 @pytest.fixture()
-def xor_df():
-    df = pd.read_csv((Path(__file__) / ".." / "data/xor.csv").resolve(), index_col=0)
+def xor_df(datadir):
+    df = pd.read_csv(datadir / "xor.csv", index_col=0)
     return df
 
 

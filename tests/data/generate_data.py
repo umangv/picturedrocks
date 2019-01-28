@@ -42,5 +42,31 @@ def xor():
     df.to_csv("xor.csv")
 
 
+@home.command()
+def test_dataset():
+    print("writing test-dataset.csv")
+    df = pd.DataFrame(
+        np.arange(16).reshape((4, 4)),
+        index=["Cell_A", "Cell_B", "Cell_C", "Cell_D"],
+        columns=["Gene_A", "Gene_B", "Gene_C", "Gene_D"],
+    )
+    df.to_csv("test-dataset.csv")
+
+@home.command()
+def test_classlabels():
+    df = pd.DataFrame(
+        np.arange(4).reshape((4, 1)) % 2,
+        index=["Cell_A", "Cell_B", "Cell_C", "Cell_D"],
+        columns=["cluster"],
+    )
+    print("writing test-labels-raw.csv")
+    df.to_csv("test-labels-raw.csv", header=False, index=False)
+    print("writing test-labels-raw-head.csv")
+    df.to_csv("test-labels-raw-head.csv", header=True, index=False)
+    print("writing test-labels-meta.csv")
+    df.to_csv("test-labels-meta.csv")
+    
+
+
 if __name__ == "__main__":
     home()
