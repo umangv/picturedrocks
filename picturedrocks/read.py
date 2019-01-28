@@ -58,6 +58,8 @@ def read_clusts(adata, filename, sep=",", name="clust", header=True, copy=False)
     clustdf = pd.read_csv(filename, sep=sep, header=header)
     if clustdf.shape[1] == 2:
         clustdf = clustdf.set_index(clustdf.columns[0])
+    elif clustdf.shape[1] == 1:
+        clustdf.index = adata.obs.index
     assert clustdf.shape[1] == 1, "Cluster column ambigious"
     clusters = clustdf.iloc[:, 0]
     if clusters.dtype.kind == "i":
