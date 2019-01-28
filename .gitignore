@@ -6,6 +6,6 @@ docs/_build
 .coverage
 build/
 dist/
-data/
+/data/
 htmlcov/
 picturedrocks.egg-info/
