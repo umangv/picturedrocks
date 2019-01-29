@@ -8,3 +8,5 @@ scanpy
 scikit-learn
 scipy
 umap-learn
+pytest
+pytest-cov
