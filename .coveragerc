@@ -1,0 +1,5 @@
+[run]
+omit =
+	picturedrocks/_version.py
+	picturedrocks/markers/interactive.py
+	picturedrocks/plot.py
