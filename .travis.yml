@@ -6,3 +6,11 @@ install:
   - pip install .
 script:
   - pytest
+deploy:
+  provider: pypi
+  distributions: "sdist bdist_wheel"
+  user: umang
+  password:
+    secure: 2y58csGRqIWPeELXL/vbqlqRnx1OADXHs0AigGZTDbIhCM5gkgptlTY4nWi7zBOTSm/xRsB7zW22Ibt5ZAppwXLoxEhWiFSSdLGOT2BEVNmHo6gT7P+7iqRmL+EP89dCVwpqutqzLn8ZLAS3A63BfrL7J7qwinTF7d96TyyMsQ7CWPovdA7qVsY9xGL1wQOj3Zc4JG4C4gKe9huRkYfKCdfYtA9tcyK6wzb1eyD2/xLgwKGdUhefhEy+ShDDiszwmS94NO02dsfVMR1/c0RmYy/+xNeyZF562z8zLyoK8grNfH14FOOrFk4dH2fbkumPs1Z401ea3me5xCIbYQ57zdxy+HH8lL0kcPLfAPnD7WoxLTrDq5LxWOLa3nzRmdOzR/pdQvobn70qyyHFJLuKn9V6cXA79B2O/ypMvFUKpih2rIqSDPuk7p5rvB73RdhhNsiKMnC3sBLvAyhoj3UHheky/IT/Z/kqvp5y3ZaLDqNiZOlqs0kfG6/TpM6qmQdLK5y7LsgBJt4ltgYArqM0wjd2ym+OWSRpmFvF+m1732VUKfQ0k0u6l42PRFJ4LYnjQXpzAg97Z6pUuDYiTplmzA75Whf9JZ19k30O9EX+rD2T+x5aLjS747OrEodWCU+2WfA2zONcBUDpHlpO+ob1iwCz8i4MjCe1d4E1TfAqiCM=
+  on:
+    tags: true
