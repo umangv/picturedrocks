@@ -3,10 +3,7 @@
 [![Build Status](https://travis-ci.com/umangv/picturedrocks.svg?branch=master)](https://travis-ci.com/umangv/picturedrocks)
 [![Documentation Status](https://readthedocs.org/projects/picturedrocks/badge/?version=latest)](https://picturedrocks.readthedocs.io/en/latest/?badge=latest)
 
-PicturedRocks is a python package that implements some single cell analysis algorithms that we are studying. Currently, we implement two marker selection algorithms:
-
-1. 1-bit Compressed Sensing algorithms based on [Conrad, et al. BMC bioinformatics '17]
-2. variants of mutual information based algorithms (e.g., the "minimum Redundance Maximum Relevance" algorithm [Peng, et al. IEEE TPAMI '05])
+PicturedRocks is a python package that implements information-theoretic feature selection algorithms. 
 
 ## Usage
 
@@ -33,7 +30,7 @@ Pull requests are welcome. Please use [numpy-style docstrings](https://sphinxcon
 
 ## Copyright
 
-Copyright © 2017, 2018 Anna Gilbert, Alexander Vargo, Umang Varma
+Copyright © 2017-2019 Umang Varma, Anna Gilbert
 
 PicturedRocks is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

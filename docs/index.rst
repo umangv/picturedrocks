@@ -6,11 +6,14 @@
 PicturedRocks--Single Cell RNA-seq Analysis Tool
 ================================================
 
-PicturedRocks is a tool for the analysis of single cell RNA-seq data.
-Currently, we implement two marker selection approaches: 
+.. image:: https://travis-ci.com/umangv/picturedrocks.svg?branch=master
+    :target: https://travis-ci.com/umangv/picturedrocks
+    :alt: Build Status
+.. image:: https://readthedocs.org/projects/picturedrocks/badge/?version=latest
+    :target: https://picturedrocks.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
-* a 1-bit compressed sensing based sparse SVM algorithm, and
-* a mutual information-based greedy feature selection algorithm.
+PicturedRocks is a python package that implements information-theoretic feature selection algorithms for scRNA-seq analysis. 
 
 
 Installing

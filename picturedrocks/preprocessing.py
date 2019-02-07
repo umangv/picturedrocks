@@ -1,4 +1,4 @@
-# Copyright © 2017, 2018 Anna Gilbert, Alexander Vargo, Umang Varma
+# Copyright © 2017-2019 Umang Varma, Anna Gilbert
 #
 # This file is part of PicturedRocks.
 #

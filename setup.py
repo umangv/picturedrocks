@@ -8,7 +8,7 @@ setuptools.setup(
     name="picturedrocks",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    author="Anna Gilbert, Alexander Vargo, Umang Varma",
+    author="Umang Varma, Anna Gilbert",
     author_email="uvarma@umich.edu",
     description="Single Cell RNA Sequencing Marker Selection Package",
     long_description=long_description,

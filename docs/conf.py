@@ -64,8 +64,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "PicturedRocks"
-copyright = "2017, Anna Gilbert, Alexander Vargo, Umang Varma"
-author = "Anna Gilbert, Alexander Vargo, Umang Varma"
+copyright = "2017-2019, Umang Varma, Anna Gilbert"
+author = "Umang Varma, Anna Gilbert"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -162,7 +162,7 @@ latex_documents = [
         master_doc,
         "PicturedRocks.tex",
         "PicturedRocks Documentation",
-        "Anna Gilbert, Alexander Vargo, Umang Varma",
+        "Umang Varma, Anna Gilbert",
         "manual",
     )
 ]
