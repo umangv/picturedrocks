@@ -49,7 +49,10 @@ def _scatter(coords, *args, **kwargs):
     """Run the appropriate scatter function"""
     assert coords.shape[1] in [2, 3], "incorrect dimensions for coords"
     if coords.shape[1] == 2:
-        return go.Scatter(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
+        try:
+            return go.Scattergl(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
+        except AttributeError:
+            return go.Scatter(x=coords[:, 0], y=coords[:, 1], *args, **kwargs)
     else:
         return go.Scatter3d(
             x=coords[:, 0], y=coords[:, 1], z=coords[:, 2], *args, **kwargs
@@ -261,7 +264,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
                 coords[inds],
                 mode="markers",
                 marker=dict(
-                    size=2,
+                    size=4,
                     color=clustscal[k % len(clustscal)],  # set color to an array/list
                     #                                  of desired values
                 ),
@@ -274,7 +277,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
         first_label = "Cells"
         numclusts = 1
         plotbyclust = [
-            _scatter(coords, mode="markers", marker=dict(size=2), name="cells")
+            _scatter(coords, mode="markers", marker=dict(size=4), name="cells")
         ]
 
     genes = [
@@ -293,7 +296,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
         _scatter(
             coords,
             mode="markers",
-            marker=dict(size=2, color=genescal[exprnorm[:, i]]),
+            marker=dict(size=4, color=genescal[exprnorm[:, i]]),
             name=genenames[i],
             text=geneexpr[:, i].astype(str),
             hoverinfo="name+text",
