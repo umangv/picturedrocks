@@ -23,7 +23,11 @@ import plotly.graph_objs as go
 import scipy.sparse
 from anndata import AnnData
 from umap import UMAP
-from scanpy.preprocessing.simple import pca
+try:
+    from scanpy.preprocessing.simple import pca
+except ModuleNotFoundError:
+    from scanpy.preprocessing import pca
+
 
 
 def _deep_merge_dict(source, destination):

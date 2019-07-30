@@ -103,6 +103,9 @@ def process_clusts(adata, name="clust", copy=False):
     adata.uns["num_clusts"] = adata.obs["clust"].cat.categories.size
     clusterindices = {}
     for k in range(adata.uns["num_clusts"]):
-        clusterindices[k] = (adata.obs["y"] == k).nonzero()[0]
+        try:
+            clusterindices[k] = (adata.obs["y"] == k).to_numpy().nonzero()[0]
+        except AttributeError:
+            clusterindices[k] = (adata.obs["y"] == k).nonzero()[0]
     adata.uns["clusterindices"] = clusterindices
     return adata
