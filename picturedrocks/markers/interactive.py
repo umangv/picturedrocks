@@ -35,14 +35,7 @@ except ImportError as e:
 
 class InteractiveMarkerSelection:
     def __init__(
-        self,
-        adata,
-        feature_selection,
-        disp_genes=10,
-        connected=True,
-        show_cells=True,
-        show_genes=True,
-        dim_red="tsne",
+        self, adata, feature_selection, visuals=None, disp_genes=10, connected=True
     ):
         """Run an interactive marker selection GUI inside a jupyter notebook
 
@@ -56,6 +49,8 @@ class InteractiveMarkerSelection:
             that corresponds to `adata` (i.e., the column indices in
             `feature_selection` should correspond to the column indices in
             `adata`)
+        visuals: list
+            List of visualizations to display, see GeneHeatmap for example
         disp_genes: int
             Number of genes to display as options (by default, number of genes
             plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
@@ -63,15 +58,6 @@ class InteractiveMarkerSelection:
         connected: bool
             Parameter to pass to `plotly.offline.init_notebook_mode`. If your
             browser does not have internet access, you should set this to False.
-        show_cells: bool
-            Determines whether to display a tSNE plot of the cells with a
-            drop-down menu to look at gene expression levels for candidate
-            genes.
-        show_genes: bool
-            Determines whether to display a tSNE plot of genes to visualize
-            gene similarity
-        dim_red: {"tsne", "umap"}
-            Dimensionality reduction algorithm
 
         Warning
         -------
@@ -85,41 +71,37 @@ class InteractiveMarkerSelection:
         self.adata = adata
         self.featsel = feature_selection
 
-        self.show_genes = show_genes
-        self.show_cells = show_cells
-        self.dim_red = dim_red
-
         init_notebook_mode(connected=connected)
 
-        if show_genes or show_cells:
-            assert dim_red in [
-                "tsne",
-                "umap",
-            ], "Invalid dimensionality Reduction Algorithm"
-            dim_red_cls = {"tsne": TSNE, "umap": UMAP}[dim_red]
-
-        if show_genes and ("gene_" + dim_red) not in self.adata.varm_keys():
-            print(f"Running {dim_red} on genes...")
-            p = PCA(n_components=30)
-            dr = dim_red_cls()
-            self.adata.varm["gene_pca"] = p.fit_transform(self.adata.X.T)
-            self.adata.varm["gene_" + dim_red] = dr.fit_transform(
-                self.adata.varm["gene_pca"]
-            )
-
-        if show_cells and ("X_" + dim_red) not in self.adata.obsm_keys():
-            print(f"Running {dim_red} on cells...")
-            p = PCA(n_components=30)
-            dr = dim_red_cls()
-            self.adata.obsm["X_pca"] = p.fit_transform(self.adata.X)
-            self.adata.obsm["X_" + dim_red] = dr.fit_transform(self.adata.obsm["X_pca"])
-
         self.disp_genes = disp_genes
-        self.plot_genes = disp_genes * 3
 
         self.out_next = ipyw.VBox()
         self.out_cur = ipyw.VBox()
-        self.out_plot = ipyw.Output()
+
+        def _get_visual_object(obj):
+            if type(obj) == str:
+                if obj == "tsne":
+                    return GeneHeatmap("tsne")
+                elif obj == "umap":
+                    return GeneHeatmap("umap")
+                else:
+                    raise ValueError(f"Invalid visualization shorthand: {obj}")
+            else:
+                return obj
+
+        if visuals is None:
+            self.visuals = [GeneHeatmap()]
+        else:
+            self.visuals = [_get_visual_object(vis) for vis in visuals]
+
+        self.out_visuals = [
+            ipyw.Output(layout=ipyw.Layout(width="100%")) for _ in self.visuals
+        ]
+        self.out_plot = ipyw.Tab(children=self.out_visuals)
+        for i, (out, vis) in enumerate(zip(self.out_visuals, self.visuals)):
+            vis.prepare(self.adata, out)
+            self.out_plot.set_title(i, vis.title)
+
         self.out = ipyw.Output()
 
         with self.out:
@@ -136,14 +118,17 @@ class InteractiveMarkerSelection:
         self.out_next.children = []
         self.out_cur.children = []
 
-        self.out_plot.clear_output()
-
         top_gene_inds = np.argsort(self.featsel.score)[::-1]
+
+        ninfscores = self.featsel.score == float("-inf")
+        scaled_scores = self.featsel.score - self.featsel.score[~ninfscores].min()
+        scaled_scores[scaled_scores < 0] = 0
+        scaled_scores = scaled_scores / scaled_scores.max()
 
         self.out_next.children = (
             [ipyw.Label("Candidate Next Gene")]
             + [
-                self._next_gene_row(gene_ind, self.featsel.score[gene_ind])
+                self._next_gene_row(gene_ind, scaled_scores[gene_ind])
                 for gene_ind in top_gene_inds[: self.disp_genes]
             ]
             + [self._other_next_gene()]
@@ -153,56 +138,10 @@ class InteractiveMarkerSelection:
             self._cur_gene_row(gene_ind) for gene_ind in self.featsel.S
         ]
 
-        ninfscores = self.featsel.score == float("-inf")
-        scaled_scores = self.featsel.score - self.featsel.score[~ninfscores].min()
-        scaled_scores[scaled_scores < 0] = 0
-        scaled_scores = scaled_scores / scaled_scores.max()
-
-        top_genes_plot = top_gene_inds[: self.plot_genes]
-        self.out_plot.clear_output()
-        with self.out_plot:
-            if self.show_cells:
-                iplot(
-                    pr.plot.plotgeneheat(
-                        self.adata,
-                        self.adata.obsm["X_" + self.dim_red],
-                        top_gene_inds[: self.disp_genes].tolist() + self.featsel.S,
-                    )
-                )
-            if self.show_genes:
-                iplot(
-                    go.Figure(
-                        data=[
-                            go.Scatter(
-                                x=self.adata.varm["gene_" + self.dim_red][
-                                    top_genes_plot, 0
-                                ],
-                                y=self.adata.varm["gene_" + self.dim_red][
-                                    top_genes_plot, 1
-                                ],
-                                text=self.adata.var_names.values.astype(str)[
-                                    top_genes_plot
-                                ],
-                                mode="markers",
-                                hoverinfo="text",
-                                marker=dict(
-                                    size=(scaled_scores[top_genes_plot] * 16).astype(
-                                        int
-                                    ),
-                                    color=np.array(cl.scales["9"]["seq"]["Blues"])[
-                                        (
-                                            3
-                                            + 5
-                                            * scaled_scores[top_genes_plot].astype(int)
-                                        )
-                                    ],
-                                    line=go.scatter.marker.Line(color="black", width=1),
-                                ),
-                            )
-                        ],
-                        layout=go.Layout(hovermode="closest"),
-                    )
-                )
+        for out in self.out_visuals:
+            out.clear_output()
+        for vis in self.visuals:
+            vis.redraw(top_gene_inds[: self.disp_genes].tolist(), self.featsel.S)
 
     def _next_gene_row(self, gene_ind, score):
         but = ipyw.Button(
@@ -282,29 +221,43 @@ class InteractiveMarkerSelection:
         self.redraw()
 
 
-def cife_obj(H, i, S):
-    """The CIFE objective function for feature selection
-    
-    Args
-    ----
-    H: function
-        an entropy function, typically the bound method H on an instance of
-        InformationSet. For example, if `infoset` is of type
-        `picturedrocks.markers.InformationSet`, then pass `infoset.H`
-    i: int
-        index of candidate gene
-    S: list
-        list of features already selected
-    Returns
-    -------
-    float
-        the candidate feature's score relative to the selected gene set `S`
-    """
-    Sset = set(S)
-    m = len(S)
-    if i in Sset:
-        return float("-inf")
-    curobj = (1 - m) * (H((i,)) - H((-1, i)))
-    for x in S:
-        curobj += H((x, i)) - H((-1, x, i))
-    return curobj
+class GeneHeatmap:
+    def __init__(self, dim_red="tsne", n_pcs=30):
+        """GeneHeatmap for Interactive Marker Selection
+
+        Args
+        ----
+        dim_red: str
+            Dimensionality reduction algorithm to use. Currently available options are "umap" and "tsne"
+        
+        n_pcs: int
+            The number of principal components to map to before running dimensionality reduction
+        """
+        assert dim_red in ["tsne", "umap"]
+        self._dim_red = dim_red
+        self.n_pcs = n_pcs
+        self.adata = None
+        self.out = None
+        self.title = "{} Heatmap".format({"tsne": "t-SNE", "umap": "UMAP"}[dim_red])
+
+    def prepare(self, adata, out):
+        self.adata = adata
+        self.out = out
+        if ("X_" + self._dim_red) not in self.adata.obsm_keys():
+            print(f"Running {self._dim_red} on cells...")
+            p = PCA(n_components=self.n_pcs)
+            if self._dim_red != "pca":
+                dr = {"tsne": TSNE, "umap": UMAP}[self._dim_red]()
+                self.adata.obsm["X_pca"] = p.fit_transform(self.adata.X)
+                self.adata.obsm["X_" + self._dim_red] = dr.fit_transform(
+                    self.adata.obsm["X_pca"]
+                )
+
+    def redraw(self, next_gene_inds, cur_gene_inds):
+        with self.out:
+            fig = pr.plot.plotgeneheat(
+                self.adata,
+                self.adata.obsm["X_" + self._dim_red],
+                next_gene_inds + cur_gene_inds,
+            )
+            iplot(fig)

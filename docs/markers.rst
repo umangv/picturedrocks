@@ -56,4 +56,3 @@ Interactive Marker Selection
 ============================
 
 .. autoclass:: picturedrocks.markers.interactive.InteractiveMarkerSelection
-.. autofunction:: picturedrocks.markers.interactive.cife_obj
