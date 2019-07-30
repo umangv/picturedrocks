@@ -1,13 +1,22 @@
 import numpy as np
 import pandas as pd
 import picturedrocks as pr
-import scanpy.api as sc
+try:
+    import scanpy as sc
+    sc.pp
+except AttributeError:
+    sc = sc.api
 import anndata
 import pytest
 
 
 def _get_version_info(v):
-    return tuple([int(x) for x in v.split(".")])
+    def try_to_int(x):
+        try:
+            return int(x)
+        except:
+            return x
+    return tuple([try_to_int(x) for x in v.split(".")])
 
 
 @pytest.fixture()
