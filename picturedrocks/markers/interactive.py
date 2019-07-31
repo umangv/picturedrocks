@@ -15,13 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with PicturedRocks.  If not, see <http://www.gnu.org/licenses/>.
 
+from abc import ABC, abstractmethod
+
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from umap import UMAP
 import colorlover as cl
 from plotly.offline import iplot, init_notebook_mode
-import plotly.graph_objs as go
+import plotly.graph_objects as go
 import picturedrocks as pr
 
 _import_errors = None
@@ -50,7 +52,10 @@ class InteractiveMarkerSelection:
             `feature_selection` should correspond to the column indices in
             `adata`)
         visuals: list
-            List of visualizations to display, see GeneHeatmap for example
+            List of visualizations to display. These can either be shorthands
+            for built-in visualizations (currently "tsne", "umap", and
+            "violin"), or an instance of InteractiveVisualization (see
+            GeneHeatmap or ViolinPlot for an example implementation).
         disp_genes: int
             Number of genes to display as options (by default, number of genes
             plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
@@ -85,6 +90,8 @@ class InteractiveMarkerSelection:
                     return GeneHeatmap("tsne")
                 elif obj == "umap":
                     return GeneHeatmap("umap")
+                elif obj == "violin":
+                    return ViolinPlot()
                 else:
                     raise ValueError(f"Invalid visualization shorthand: {obj}")
             elif isinstance(obj, InteractiveVisualization):
@@ -257,7 +264,7 @@ class InteractiveVisualization(ABC):
         pass
 
 
-class GeneHeatmap:
+class GeneHeatmap(InteractiveVisualization):
     def __init__(self, dim_red="tsne", n_pcs=30):
         """GeneHeatmap for Interactive Marker Selection
 
@@ -269,16 +276,17 @@ class GeneHeatmap:
         n_pcs: int
             The number of principal components to map to before running dimensionality reduction
         """
+        super().__init__()
         assert dim_red in ["tsne", "umap"]
         self._dim_red = dim_red
         self.n_pcs = n_pcs
-        self.adata = None
-        self.out = None
-        self.title = "{} Heatmap".format({"tsne": "t-SNE", "umap": "UMAP"}[dim_red])
+
+    @property
+    def title(self):
+        return "{} Heatmap".format({"tsne": "t-SNE", "umap": "UMAP"}[self._dim_red])
 
     def prepare(self, adata, out):
-        self.adata = adata
-        self.out = out
+        super().prepare(adata, out)
         if ("X_" + self._dim_red) not in self.adata.obsm_keys():
             print(f"Running {self._dim_red} on cells...")
             p = PCA(n_components=self.n_pcs)
@@ -297,3 +305,49 @@ class GeneHeatmap:
                 next_gene_inds + cur_gene_inds,
             )
             iplot(fig)
+
+
+class ViolinPlot(InteractiveVisualization):
+    def __init__(self):
+        super().__init__()
+
+    @property
+    def title(self):
+        return "Violin Plots"
+
+    def prepare(self, adata, out):
+        super().prepare(adata, out)
+
+    def redraw(self, next_gene_inds, cur_gene_inds):
+        plot_out = ipyw.Output(layout={"height": "500px"})
+        dropdown = ipyw.Dropdown(
+            options=[
+                (self.adata.var_names[i], i) for i in next_gene_inds + cur_gene_inds
+            ]
+        )
+        vbox = ipyw.VBox([dropdown, plot_out])
+
+        def _change_gene(change=None):
+            if change is None:
+                gene_ind = dropdown.value
+            else:
+                gene_ind = change["new"]
+            plot_out.clear_output()
+            if not isinstance(gene_ind, int):
+                return
+            with plot_out:
+                fig = go.Figure()
+                fig.add_trace(
+                    go.Violin(
+                        x=self.adata.obs["y"],
+                        y=self.adata.X[:, gene_ind],
+                        points="all",
+                    )
+                )
+                fig.update_layout(title=self.adata.var_names[gene_ind])
+                fig.show()
+
+        dropdown.observe(_change_gene, "value")
+        with self.out:
+            display(vbox)
+        _change_gene()
