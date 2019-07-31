@@ -1,11 +1,15 @@
-__pycache__
-docs/_build
+# configuration and temporary files
 *.swp
 *.swo
 .vscode
 .coverage
+# cache and build directories 
+__pycache__
+.pytest_cache/
+docs/_build
 build/
 dist/
+picturedrocks.egg-info/
+# misc
 /data/
 htmlcov/
-picturedrocks.egg-info/
