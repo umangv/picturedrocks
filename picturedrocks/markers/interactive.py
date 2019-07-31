@@ -74,6 +74,7 @@ class InteractiveMarkerSelection:
         init_notebook_mode(connected=connected)
 
         self.disp_genes = disp_genes
+        self.top_genes = []
 
         self.out_next = ipyw.VBox()
         self.out_cur = ipyw.VBox()
@@ -86,18 +87,28 @@ class InteractiveMarkerSelection:
                     return GeneHeatmap("umap")
                 else:
                     raise ValueError(f"Invalid visualization shorthand: {obj}")
-            else:
+            elif isinstance(obj, InteractiveVisualization):
                 return obj
+            else:
+                raise ValueError(
+                    "Visual must be a shorthand or an instance of InteractiveVisualization"
+                )
 
         if visuals is None:
             self.visuals = [GeneHeatmap()]
         else:
             self.visuals = [_get_visual_object(vis) for vis in visuals]
 
+        def _tab_changed(change):
+            if change["new"] is not None:
+                self.draw_visual(change["new"])
+
         self.out_visuals = [
             ipyw.Output(layout=ipyw.Layout(width="100%")) for _ in self.visuals
         ]
+        self.visuals_drawn = [False] * len(self.visuals)
         self.out_plot = ipyw.Tab(children=self.out_visuals)
+        self.out_plot.observe(_tab_changed, "selected_index")
         for i, (out, vis) in enumerate(zip(self.out_visuals, self.visuals)):
             vis.prepare(self.adata, out)
             self.out_plot.set_title(i, vis.title)
@@ -113,12 +124,19 @@ class InteractiveMarkerSelection:
         self.out_next.children = [ipyw.Label("Loading...")]
         self.out_cur.children = []
 
+    def draw_visual(self, visual_ind):
+        """Lazily draw visualization"""
+        if not self.visuals_drawn[visual_ind]:
+            self.visuals[visual_ind].redraw(self.top_genes, self.featsel.S)
+            self.visuals_drawn[visual_ind] = True
+
     def redraw(self):
         """Redraw jupyter widgets"""
         self.out_next.children = []
         self.out_cur.children = []
 
         top_gene_inds = np.argsort(self.featsel.score)[::-1]
+        self.top_genes = top_gene_inds[: self.disp_genes].tolist()
 
         ninfscores = self.featsel.score == float("-inf")
         scaled_scores = self.featsel.score - self.featsel.score[~ninfscores].min()
@@ -129,7 +147,7 @@ class InteractiveMarkerSelection:
             [ipyw.Label("Candidate Next Gene")]
             + [
                 self._next_gene_row(gene_ind, scaled_scores[gene_ind])
-                for gene_ind in top_gene_inds[: self.disp_genes]
+                for gene_ind in self.top_genes
             ]
             + [self._other_next_gene()]
         )
@@ -138,10 +156,10 @@ class InteractiveMarkerSelection:
             self._cur_gene_row(gene_ind) for gene_ind in self.featsel.S
         ]
 
+        self.visuals_drawn = [False] * len(self.visuals)
         for out in self.out_visuals:
             out.clear_output()
-        for vis in self.visuals:
-            vis.redraw(top_gene_inds[: self.disp_genes].tolist(), self.featsel.S)
+        self.draw_visual(self.out_plot.selected_index)
 
     def _next_gene_row(self, gene_ind, score):
         but = ipyw.Button(
@@ -219,6 +237,24 @@ class InteractiveMarkerSelection:
         """Display the jupyter widgets"""
         display(self.out)
         self.redraw()
+
+
+class InteractiveVisualization(ABC):
+    def __init__(self):
+        self.adata = None
+        self.out = None
+
+    def prepare(self, adata, out):
+        self.adata = adata
+        self.out = out
+
+    @property
+    def title(self):
+        return "Untitled"
+
+    @abstractmethod
+    def redraw(self, next_gene_inds, cur_gene_inds):
+        pass
 
 
 class GeneHeatmap:
