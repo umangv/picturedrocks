@@ -23,11 +23,11 @@ import plotly.graph_objs as go
 import scipy.sparse
 from anndata import AnnData
 from umap import UMAP
+
 try:
     from scanpy.preprocessing.simple import pca
 except ModuleNotFoundError:
     from scanpy.preprocessing import pca
-
 
 
 def _deep_merge_dict(source, destination):
@@ -308,13 +308,25 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
         dict(
             label=first_label,
             method="update",
-            args=[{"visible": [True] * numclusts + [False] * numgenes}, {}],
+            args=[
+                {
+                    "visible": [True] * numclusts + [False] * numgenes,
+                    "showlegend": True,
+                },
+                {},
+            ],
         )
     ]
     for i, genename in enumerate(genenames):
         v = [False] * (numclusts + numgenes)
         v[numclusts + i] = True
-        buttons.append(dict(label=genename, method="update", args=[{"visible": v}, {}]))
+        buttons.append(
+            dict(
+                label=genename,
+                method="update",
+                args=[{"visible": v, "showlegend": False}, {}],
+            )
+        )
     if scatterkwargs:
         for p in plotbyclust + plotbygene:
             _deep_merge_dict(scatterkwargs, p)
@@ -346,6 +358,7 @@ def plotgeneheat(celldata, coords, genes, hide_clusts=False, **scatterkwargs):
             )
         ],
         showlegend=True,
+        legend_orientation="h"
     )
 
     return go.Figure(data=plotbyclust + plotbygene, layout=layout)
