@@ -319,35 +319,39 @@ class ViolinPlot(InteractiveVisualization):
         super().prepare(adata, out)
 
     def redraw(self, next_gene_inds, cur_gene_inds):
-        plot_out = ipyw.Output(layout={"height": "500px"})
-        dropdown = ipyw.Dropdown(
-            options=[
-                (self.adata.var_names[i], i) for i in next_gene_inds + cur_gene_inds
-            ]
-        )
-        vbox = ipyw.VBox([dropdown, plot_out])
-
-        def _change_gene(change=None):
-            if change is None:
-                gene_ind = dropdown.value
-            else:
-                gene_ind = change["new"]
-            plot_out.clear_output()
-            if not isinstance(gene_ind, int):
-                return
-            with plot_out:
-                fig = go.Figure()
-                fig.add_trace(
-                    go.Violin(
-                        x=self.adata.obs["y"],
-                        y=self.adata.X[:, gene_ind],
-                        points="all",
-                    )
+        fig = go.Figure()
+        gene_inds = next_gene_inds + cur_gene_inds
+        buttons = []
+        for i, gind in enumerate(gene_inds):
+            visible = [False] * len(gene_inds)
+            visible[i] = True
+            buttons.append(
+                dict(
+                    label=self.adata.var_names[gind],
+                    method="update",
+                    args=[{"visible": visible}],
                 )
-                fig.update_layout(title=self.adata.var_names[gene_ind])
-                fig.show()
+            )
+            fig.add_trace(
+                go.Violin(
+                    x=self.adata.obs["clust"],
+                    y=self.adata.X[:, gind],
+                    points="all",
+                    visible=(i == 0),
+                )
+            )
+        updatemenus = [
+            dict(
+                buttons=buttons,
+                direction="down",
+                x=0,
+                y=1.1,
+                xanchor="left",
+                yanchor="top",
+                pad={"r": 0, "t": 0},
+            )
+        ]
 
-        dropdown.observe(_change_gene, "value")
+        fig.update_layout(updatemenus=updatemenus)
         with self.out:
-            display(vbox)
-        _change_gene()
+            fig.show()
