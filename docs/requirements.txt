@@ -1,16 +1,6 @@
-anndata
-colorlover
-h5py
 matplotlib
-numpy
-pandas
-plotly>=4.0
-scanpy>=1.4
-scikit-learn
-scipy
 Sphinx
 sphinx-rtd-theme
 sphinxcontrib-napoleon
 nbsphinx
 ipython
-umap-learn
