@@ -3,8 +3,8 @@ colorlover
 h5py
 numpy
 pandas
-plotly
-scanpy
+plotly>=4.0
+scanpy>=1.4
 scikit-learn
 scipy
 umap-learn

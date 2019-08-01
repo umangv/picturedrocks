@@ -55,7 +55,7 @@ class InteractiveMarkerSelection:
             List of visualizations to display. These can either be shorthands
             for built-in visualizations (currently "tsne", "umap", and
             "violin"), or an instance of InteractiveVisualization (see
-            GeneHeatmap or ViolinPlot for an example implementation).
+            GeneHeatmap and ViolinPlot for example implementations).
         disp_genes: int
             Number of genes to display as options (by default, number of genes
             plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
@@ -309,6 +309,7 @@ class GeneHeatmap(InteractiveVisualization):
 
 class ViolinPlot(InteractiveVisualization):
     def __init__(self):
+        """Violin Plots for each class label"""
         super().__init__()
 
     @property

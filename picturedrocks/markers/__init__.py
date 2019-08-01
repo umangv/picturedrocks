@@ -19,3 +19,4 @@ from . import mutualinformation
 from .mutualinformation.infoset import makeinfoset, InformationSet, SparseInformationSet
 from .mutualinformation.iterative import CIFE, CIFEUnsup, JMI, MIM, UniEntropy
 from . import interactive
+from .interactive import InteractiveMarkerSelection

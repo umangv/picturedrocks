@@ -35,6 +35,7 @@ To install the latest code from github, clone our github repository. Once inside
    preprocessing
    plot
    markers
+   interactive
    performance
 
 
