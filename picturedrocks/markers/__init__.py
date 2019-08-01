@@ -17,6 +17,13 @@
 
 from . import mutualinformation
 from .mutualinformation.infoset import makeinfoset, InformationSet, SparseInformationSet
-from .mutualinformation.iterative import CIFE, CIFEUnsup, JMI, MIM, UniEntropy
+from .mutualinformation.iterative import (
+    CIFE,
+    CIFEUnsup,
+    JMI,
+    MIM,
+    UniEntropy,
+)
+from ._iterative import IterativeFeatureSelection
 from . import interactive
 from .interactive import InteractiveMarkerSelection

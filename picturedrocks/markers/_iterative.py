@@ -21,6 +21,7 @@ from abc import ABC, abstractmethod
 
 class IterativeFeatureSelection(ABC):
     """Abstract Class for Iterative Feature Selection"""
+
     @abstractmethod
     def __init__(self, infoset):
         self.infoset = infoset
@@ -52,7 +53,7 @@ class IterativeFeatureSelection(ABC):
     def autoselect(self, n_feats):
         """Auto select features
 
-        This automatically selects `n_feats` features greedily by selecting
+        This automatically selects ``n_feats`` features greedily by selecting
         the feature with the highest score at each iteration.
 
         Args

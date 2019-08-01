@@ -45,6 +45,9 @@ greedy algorithms. In general, they implement the abstract class
 :class:`~picturedrocks.markers.mutualinformation.IterativeFeatureSelection` class. See :ref:`sup_mi` and :ref:`unsup_mi` below for specific algorithms.
 
 
+.. autoclass:: IterativeFeatureSelection
+   :members:
+
 .. _sup_mi:
 
 Supervised Feature Selection
