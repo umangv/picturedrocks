@@ -61,7 +61,7 @@ class InteractiveMarkerSelection:
             plotted on the tSNE plot is `3 * disp_genes`, but can be changed by
             setting the `plot_genes` property after initializing.
         connected: bool
-            Parameter to pass to `plotly.offline.init_notebook_mode`. If your
+            Parameter to pass to ``plotly.offline.init_notebook_mode``. If your
             browser does not have internet access, you should set this to False.
 
         Warning
@@ -108,7 +108,7 @@ class InteractiveMarkerSelection:
 
         def _tab_changed(change):
             if change["new"] is not None:
-                self.draw_visual(change["new"])
+                self._draw_visual(change["new"])
 
         self.out_visuals = [
             ipyw.Output(layout=ipyw.Layout(width="100%")) for _ in self.visuals
@@ -131,14 +131,17 @@ class InteractiveMarkerSelection:
         self.out_next.children = [ipyw.Label("Loading...")]
         self.out_cur.children = []
 
-    def draw_visual(self, visual_ind):
+    def _draw_visual(self, visual_ind):
         """Lazily draw visualization"""
         if not self.visuals_drawn[visual_ind]:
             self.visuals[visual_ind].redraw(self.top_genes, self.featsel.S)
             self.visuals_drawn[visual_ind] = True
 
     def redraw(self):
-        """Redraw jupyter widgets"""
+        """Redraw jupyter widgets after a change
+        
+        This is called internally and there should usually be no need for the
+        user to explicitly call this method."""
         self.out_next.children = []
         self.out_cur.children = []
 
@@ -166,7 +169,7 @@ class InteractiveMarkerSelection:
         self.visuals_drawn = [False] * len(self.visuals)
         for out in self.out_visuals:
             out.clear_output()
-        self.draw_visual(self.out_plot.selected_index)
+        self._draw_visual(self.out_plot.selected_index)
 
     def _next_gene_row(self, gene_ind, score):
         but = ipyw.Button(
@@ -248,19 +251,53 @@ class InteractiveMarkerSelection:
 
 class InteractiveVisualization(ABC):
     def __init__(self):
+        """Abstract base class for interactive visualizations
+
+        Extend this class and pass an instance of it to
+        InteractiveMarkerSelection to use your own visualization. It is
+        recommended that you begin your implementation of ``__init__`` with::
+
+            super().__init__()
+
+        You are welcome to add parameters specific to your visualization in the
+        ``__init__`` method.
+        """
         self.adata = None
         self.out = None
 
     def prepare(self, adata, out):
+        """Prepare for visualization
+
+        This method is called when InteractiveMarkerSelection is initialized.
+        It is recommended that you begin your implementation with ::
+
+            super().prepare(adata, out)
+
+        This stores adata and out in ``self.adata`` and ``self.out``
+        respectively.
+        """
         self.adata = adata
         self.out = out
 
     @property
     def title(self):
+        """Title of the visualization
+        
+        This should be a Python property, using the ``@property``
+        decorator.
+        """
         return "Untitled"
 
     @abstractmethod
     def redraw(self, next_gene_inds, cur_gene_inds):
+        """Draw the visualization
+
+        You must implement this method. To display the plots in the
+        appropriate widget, use::
+
+            with self.out:
+                fig.show() # or your plotting library's equivalent
+        """
         pass
 
 

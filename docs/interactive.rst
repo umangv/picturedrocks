@@ -19,6 +19,7 @@ PicturedRocks provides an interactive user interface for selecting markers that 
 The user can specify the tabs they want available through the `visuals` argument. It is also possible to write your own interface for a tab using any plotting library available to you. See below for more details.
 
 .. autoclass:: InteractiveMarkerSelection
+   :members:
 .. autoclass:: GeneHeatmap
 .. autoclass:: ViolinPlot
 
@@ -28,4 +29,5 @@ Using Your Own Visualizations
 To write your own visualization, simply extend the :class:`~picturedrocks.markers.interactive.InteractiveVisualization`. Use the source code for :class:`~GeneHeatmap` and :class:`~ViolinPlot` as a reference for implementation.
 
 .. autoclass:: InteractiveVisualization
+   :members:
 

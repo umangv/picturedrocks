@@ -23,7 +23,7 @@ Please ensure you have Python 3.6 or newer and have `numba` and `scikit-learn` i
 
     pip install picturedrocks
 
-To install the latest code from github, clone our github repository. Once inside the project directory, instal by running ``pip install -e .``. The ``-e`` option will point a symbolic link to the current directory instead of installing a copy on your system.
+To install the latest code from github, clone our github repository. Once inside the project directory, instal by running ``pip install -e .``. The ``-e`` option will point a symbolic link to the current directory instead of installing a copy on your system. This allows you to update picturedrocks by pulling the latest commit from github.
 
 .. toctree::
    :maxdepth: 2
