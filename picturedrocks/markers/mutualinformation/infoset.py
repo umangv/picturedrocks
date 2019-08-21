@@ -302,15 +302,6 @@ class SparseInformationSet:
             classsizes,
         )
 
-    def todense(self):
-        """Return a InformationSet with the same data stored as a dense array"""
-        return InformationSet(self.X.toarray(), self.has_y)
-
-    @staticmethod
-    def fromdense(denseinfoset):
-        """Create SparseInformationSet with the same data stored as a sparse matrix"""
-        return SparseInformationSet(denseinfoset.X, denseinfoset.has_y)
-
 
 @nb.njit
 def _sparse_entropy_wrt(
