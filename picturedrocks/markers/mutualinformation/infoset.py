@@ -23,7 +23,7 @@ import scipy.sparse
 
 
 def makeinfoset(adata, include_y, k=5):
-    """Discretize data and make a Sparse InformationSet object
+    """Discretize data and make a ``SparseInformationSet`` object
 
     Args
     ----
@@ -179,10 +179,10 @@ class SparseInformationSet:
     Args
     ----
     X: scipy.sparse.csc_matrix
-        a (num_obs, num_vars) shape matrix with ``dtype`` :class:`int`
-    has_y: bool
-        whether the array `X` has a target label column (a `y` column) as its
-        last column
+        a (num_obs, num_vars) shape matrix with ``dtype`` ``np.integer``
+    y: Union[NoneType, numpy.ndarray]
+        if there is a target label column then this should be the target
+        label, otherwise pass None.
     """
 
     def __init__(self, X, y=None):
@@ -221,9 +221,11 @@ class SparseInformationSet:
         Args
         ----
         cols: numpy.ndarray
-            a 1-d array (of dtype int64) with indices of columns to compute
-            entropy over
-        
+            a 1-d array (of dtype ``int64``) with indices of columns to
+            compute entropy over. To include the ``y`` column, use index
+            ``-1`` as the first entry of cols. All entries in cols except for
+            the first entry must be non-negative.
+
         Returns
         -------
         numpy.int64
@@ -256,7 +258,16 @@ class SparseInformationSet:
         Args
         ----
         cols: numpy.ndarray
-            a 1-d array of columns
+            a 1-d array (of dtype ``int64``) with indices of columns to
+            compute entropy with respect to. To include the ``y`` column, use
+            index ``-1`` as the first entry of cols. All entries in cols
+            except for the first entry must be non-negative.
+        
+        Note
+        ----
+        To compute the entropy of all columns, you need to pass an empty
+        numpy array of dtype ``int64``. A quick way to do so is
+        ``np.arange(0)``.
 
         Returns
         -------

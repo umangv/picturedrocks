@@ -66,6 +66,8 @@ Unsupervised Feature Selection
 Auxiliary Classes and Methods
 +++++++++++++++++++++++++++++
 .. autoclass:: InformationSet
+   :members:
 .. autoclass:: SparseInformationSet
+   :members:
 .. autofunction:: makeinfoset
 .. autofunction:: picturedrocks.markers.mutualinformation.infoset.quantile_discretize
