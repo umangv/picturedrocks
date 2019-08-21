@@ -186,7 +186,6 @@ class SparseInformationSet:
     """
 
     def __init__(self, X, y=None):
-        self.set_y(y)
         # our algorithm uses csc matrices under the assumption and zeros are
         # eliminated and entries have been sorted. Ensure this is the case.
         self.X = scipy.sparse.csc_matrix(X)
@@ -198,6 +197,7 @@ class SparseInformationSet:
         self.N = self.X.shape[0]
         self.P = self.X.shape[1]
         self._shift = int(np.log2(self.X.max()) + 1)
+        self.set_y(y)
 
     def set_y(self, y):
         self.has_y = y is not None
@@ -206,7 +206,11 @@ class SparseInformationSet:
             if scipy.sparse.issparse(self.y):
                 self.y = self.y.toarray().flatten()
             assert np.issubdtype(self.y.dtype, np.integer), "y should be integer dtype"
+            assert self.y.shape == (self.N,)
             self.classsizes = np.zeros(self.y.max() + 1)
+            assert np.all(
+                np.isin(self.y, np.arange(self.classsizes.size))
+            ), "y should have non-negative integers only; try using np.unique with return_inverse"
             for i in self.y:
                 self.classsizes[i] += 1
             self._ybits = int(np.log2(self.y.max()) + 1)
