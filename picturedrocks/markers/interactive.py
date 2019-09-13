@@ -153,6 +153,7 @@ class InteractiveMarkerSelection:
         scaled_scores = self.featsel.score - self.featsel.score[~ninfscores].min()
         scaled_scores[scaled_scores < 0] = 0
         scaled_scores = scaled_scores / scaled_scores.max()
+        self.scaled_scores = scaled_scores
 
         self.out_next.children = (
             [ipyw.Label("Candidate genes")]
@@ -226,7 +227,7 @@ class InteractiveMarkerSelection:
             nonlocal gene_ind
             try:
                 gene_ind = self.adata.var_names.get_loc(textbox.value)
-                label.value = "(score: {:0.4f})".format(self.featsel.score[gene_ind])
+                label.value = "(score: {:0.4f})".format(self.scaled_scores[gene_ind])
                 but.disabled = False
             except KeyError:
                 gene_ind = -1
