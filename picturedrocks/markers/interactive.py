@@ -375,7 +375,9 @@ class ViolinPlot(InteractiveVisualization):
                     x=self.adata.obs["clust"],
                     y=self.adata.X[:, gind],
                     points="all",
+                    pointpos=0,
                     visible=(i == 0),
+                    marker=dict(size=2)
                 )
             )
         updatemenus = [
@@ -391,5 +393,6 @@ class ViolinPlot(InteractiveVisualization):
         ]
 
         fig.update_layout(updatemenus=updatemenus)
+        fig.update_layout(margin=go.layout.Margin(l=10,r=10,t=10,b=10))
         with self.out:
             fig.show()
