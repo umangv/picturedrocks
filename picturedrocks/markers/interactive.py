@@ -154,7 +154,7 @@ class InteractiveMarkerSelection:
         scaled_scores = scaled_scores / scaled_scores.max()
 
         self.out_next.children = (
-            [ipyw.Label("Candidate Next Gene")]
+            [ipyw.Label("Candidate genes")]
             + [
                 self._next_gene_row(gene_ind, scaled_scores[gene_ind])
                 for gene_ind in self.top_genes
