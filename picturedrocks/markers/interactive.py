@@ -116,6 +116,7 @@ class InteractiveMarkerSelection:
         self.visuals_drawn = [False] * len(self.visuals)
         self.out_plot = ipyw.Tab(children=self.out_visuals)
         self.out_plot.observe(_tab_changed, "selected_index")
+        self.out_plot.layout.visibility = "visible" if len(self.visuals_drawn) > 0 else "hidden"
         for i, (out, vis) in enumerate(zip(self.out_visuals, self.visuals)):
             vis.prepare(self.adata, out)
             self.out_plot.set_title(i, vis.title)
@@ -133,7 +134,7 @@ class InteractiveMarkerSelection:
 
     def _draw_visual(self, visual_ind):
         """Lazily draw visualization"""
-        if not self.visuals_drawn[visual_ind]:
+        if 0 <= visual_ind < len(self.visuals_drawn) and not self.visuals_drawn[visual_ind]:
             self.visuals[visual_ind].redraw(self.top_genes, self.featsel.S)
             self.visuals_drawn[visual_ind] = True
 
