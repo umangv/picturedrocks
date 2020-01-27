@@ -23,8 +23,12 @@ from sklearn.manifold import TSNE
 from umap import UMAP
 import colorlover as cl
 from plotly.offline import iplot, init_notebook_mode
-import plotly.graph_objects as go
 import picturedrocks as pr
+
+try:
+    import plotly.graph_objs as go
+except ModuleNotFoundError:
+    import plotly.graph_objects as go
 
 _import_errors = None
 

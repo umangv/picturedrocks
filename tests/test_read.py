@@ -11,6 +11,7 @@ import pytest
 
 
 def _get_version_info(v):
+    v = str(v)
     def try_to_int(x):
         try:
             return int(x)
