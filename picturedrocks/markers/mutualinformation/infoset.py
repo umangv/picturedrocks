@@ -83,7 +83,7 @@ def quantile_discretize(X, k=5):
     return newX
 
 
-@nb.jitclass(
+@nb.experimental.jitclass(
     [
         ("has_y", nb.bool_),
         ("X", nb.int64[:, :]),
