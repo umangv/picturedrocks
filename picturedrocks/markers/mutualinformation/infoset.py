@@ -404,7 +404,8 @@ def _sparse_entropy_wrt(
                 i,
             )
             for i in range(n_feats)
-        ]
+        ],
+        dtype=np.float64
     )
     return hs
 
